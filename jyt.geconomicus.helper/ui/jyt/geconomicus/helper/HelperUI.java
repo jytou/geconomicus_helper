@@ -11,7 +11,6 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -64,6 +63,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -82,9 +82,17 @@ public class HelperUI extends JFrame
 	private static final int PLAYER_NEEDS_BANK = 0;
 	private static final int PLAYER_IN_PRISON = 2;
 
-	private class EventTableModel extends AbstractTableModel
+	private class EventTableModelDebtMoney extends AbstractTableModel
 	{
-		private final String[] COL_NAMES = new String[] {"Heure", "Type", "Joueur", "Intérêts", "Principal", "Cartes 1", "Cartes 2", "Cartes 4"};
+		private final String[] COL_NAMES_DEBT_MONEY = new String[] {"Heure", "Type", "Joueur", "Intérêts", "Principal", "Cartes 1", "Cartes 2", "Cartes 4"};
+		private final String[] COL_NAMES_LIBRE_MONEY = new String[] {"Heure", "Type", "Joueur", "Monnaie Faible", "Monnaie Moyenne", "Monnaie Forte", "Cartes 1", "Cartes 2", "Cartes 4"};
+		private int mMoneySystem;
+
+		public EventTableModelDebtMoney(int pMoneySystem)
+		{
+			super();
+			mMoneySystem = pMoneySystem;
+		}
 
 		@Override
 		public Object getValueAt(int pRowIndex, int pColumnIndex)
@@ -100,20 +108,45 @@ public class HelperUI extends JFrame
 					return event.getEvt().getDescription();
 				case 2:
 					return event.getPlayer() == null ? "" : event.getPlayer().getName();
-				case 3:
-					return event.getInterest();
-				case 4:
-					return event.getPrincipal();
-				case 5:
-					return event.getWeakCards();
-				case 6:
-					return event.getMediumCards();
-				case 7:
-					return event.getStrongCards();
-	
 				default:
-					return "";
+					break;
 				}
+				if (mMoneySystem == Game.MONEY_DEBT)
+					switch (pColumnIndex)
+					{
+					case 3:
+						return event.getInterest();
+					case 4:
+						return event.getPrincipal();
+					case 5:
+						return event.getWeakCards();
+					case 6:
+						return event.getMediumCards();
+					case 7:
+						return event.getStrongCards();
+		
+					default:
+						return "";
+					}
+				else
+					switch (pColumnIndex)
+					{
+					case 3:
+						return event.getWeakCoins();
+					case 4:
+						return event.getMediumCoins();
+					case 5:
+						return event.getStrongCoins();
+					case 6:
+						return event.getWeakCards();
+					case 7:
+						return event.getMediumCards();
+					case 8:
+						return event.getStrongCards();
+		
+					default:
+						return "";
+					}
 			}
 		}
 
@@ -129,13 +162,13 @@ public class HelperUI extends JFrame
 		@Override
 		public int getColumnCount()
 		{
-			return COL_NAMES.length;
+			return mMoneySystem == Game.MONEY_DEBT ? COL_NAMES_DEBT_MONEY.length : COL_NAMES_LIBRE_MONEY.length;
 		}
 
 		@Override
 		public String getColumnName(int pColumn)
 		{
-			return COL_NAMES[pColumn];
+			return mMoneySystem == Game.MONEY_DEBT ? COL_NAMES_DEBT_MONEY[pColumn] : COL_NAMES_LIBRE_MONEY[pColumn];
 		}
 	}
 
@@ -162,7 +195,15 @@ public class HelperUI extends JFrame
 
 	private class PlayerTableModel extends AbstractTableModel
 	{
-		private final String[] COL_NAMES = new String[] {"Statut", "Nom", "Âge", "Principal", "Intérêts", "Historique"};
+		private final String[] COL_NAMES_DEBT_MONEY = new String[] {"Statut", "Nom", "Âge", "Principal", "Intérêts", "Historique"};
+		private final String[] COL_NAMES_LIBRE_MONEY = new String[] {"Statut", "Nom", "Âge", "Historique"};
+		private int mMoneySystem;
+
+		public PlayerTableModel(int pMoneySystem)
+		{
+			super();
+			mMoneySystem = pMoneySystem;
+		}
 
 		@Override
 		public Object getValueAt(int pRowIndex, int pColumnIndex)
@@ -185,11 +226,11 @@ public class HelperUI extends JFrame
 						return String.valueOf(age);
 				}
 				case 3:
-					return player.getCurDebt();
+					return mMoneySystem == Game.MONEY_DEBT ? player.getCurDebt() : mCreditHistory.get(player.getId()).toString();
 				case 4:
-					return player.getCurInterest();
+					return mMoneySystem == Game.MONEY_DEBT ? player.getCurInterest() : "";
 				case 5:
-					return mCreditHistory.get(player.getId()).toString();
+					return mMoneySystem == Game.MONEY_DEBT ? mCreditHistory.get(player.getId()).toString() : "";
 
 				default:
 					break;
@@ -201,7 +242,7 @@ public class HelperUI extends JFrame
 		@Override
 		public Class<?> getColumnClass(int pColumnIndex)
 		{
-			return pColumnIndex == 1 || pColumnIndex == 4 ? String.class : Integer.class;
+			return pColumnIndex == 1 || pColumnIndex == (mMoneySystem == Game.MONEY_DEBT ? 4 : 3) ? String.class : Integer.class;
 		}
 
 		@Override
@@ -216,13 +257,13 @@ public class HelperUI extends JFrame
 		@Override
 		public int getColumnCount()
 		{
-			return COL_NAMES.length;
+			return mMoneySystem == Game.MONEY_DEBT ? COL_NAMES_DEBT_MONEY.length : COL_NAMES_LIBRE_MONEY.length;
 		}
 
 		@Override
 		public String getColumnName(int pColumn)
 		{
-			return COL_NAMES[pColumn];
+			return mMoneySystem == Game.MONEY_DEBT ? COL_NAMES_DEBT_MONEY[pColumn] : COL_NAMES_LIBRE_MONEY[pColumn];
 		}
 
 		@Override
@@ -609,7 +650,7 @@ public class HelperUI extends JFrame
 			}
 		});
 		final JPanel mainPanel = new JPanel(new GridBagLayout());
-		final JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, buildPlayerListPane(), buildEventListPane());
+		final JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, buildPlayerListPane(pGame.getMoneySystem()), buildEventListPane(pGame.getMoneySystem()));
 		mainPanel.add(mainSplitPane, new GridBagConstraints(0, 2, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		mainSplitPane.setResizeWeight(0.3);
 		addWindowFocusListener(new WindowFocusListener()
@@ -691,17 +732,24 @@ public class HelperUI extends JFrame
 		setVisible(true);
 	}
 
-	public JPanel buildPlayerListPane()
+	public JPanel buildPlayerListPane(int pMoneySystem)
 	{
 		final JPanel playerListPane = new JPanel(new GridBagLayout());
-		mPlayerTableModel = new PlayerTableModel();
+		mPlayerTableModel = new PlayerTableModel(pMoneySystem);
 		mPlayerTable = new JTable(mPlayerTableModel);
 		mPlayerTable.setDefaultRenderer(Integer.class, new ColorRenderer());
-		mPlayerTable.getColumnModel().getColumn(0).setPreferredWidth(10);
-		mPlayerTable.getColumnModel().getColumn(1).setPreferredWidth(100);
-		mPlayerTable.getColumnModel().getColumn(2).setPreferredWidth(10);
-		mPlayerTable.getColumnModel().getColumn(3).setPreferredWidth(30);
-		mPlayerTable.getColumnModel().getColumn(4).setPreferredWidth(30);
+		final TableColumnModel columnModel = mPlayerTable.getColumnModel();
+		columnModel.getColumn(0).setPreferredWidth(10);// Status
+		columnModel.getColumn(1).setPreferredWidth(100);// Name
+		columnModel.getColumn(2).setPreferredWidth(10);// Age
+		if (pMoneySystem == Game.MONEY_DEBT)
+		{
+			columnModel.getColumn(3).setPreferredWidth(30);// Principal
+			columnModel.getColumn(4).setPreferredWidth(30);// Interest
+			columnModel.getColumn(4).setPreferredWidth(60);// History
+		}
+		else
+			columnModel.getColumn(3).setPreferredWidth(30);// History (essentially rebirth)
 		playerListPane.add(new JScrollPane(mPlayerTable), new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		mPlayerTable.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -714,23 +762,22 @@ public class HelperUI extends JFrame
 		return playerListPane;
 	}
 
-	public JPanel buildEventListPane()
+	public JPanel buildEventListPane(int pMoneySystem)
 	{
 		final JPanel eventListPane = new JPanel(new GridBagLayout());
 		eventListPane.add(new JLabel("Morts suggérés :"), new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		mSuggestedDeathsLabel = new JLabel();
 		eventListPane.add(mSuggestedDeathsLabel, new GridBagConstraints(1, 0, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		mEventTableModel = new EventTableModel();
+		mEventTableModel = new EventTableModelDebtMoney(pMoneySystem);
 		mEventTable = new JTable(mEventTableModel);
 		eventListPane.add(new JScrollPane(mEventTable), new GridBagConstraints(0, 10, 2, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
-		mEventTable.getColumnModel().getColumn(0).setPreferredWidth(70);
-		mEventTable.getColumnModel().getColumn(1).setPreferredWidth(150);
-		mEventTable.getColumnModel().getColumn(2).setPreferredWidth(100);
-		mEventTable.getColumnModel().getColumn(3).setPreferredWidth(30);
-		mEventTable.getColumnModel().getColumn(4).setPreferredWidth(30);
-		mEventTable.getColumnModel().getColumn(5).setPreferredWidth(30);
-		mEventTable.getColumnModel().getColumn(6).setPreferredWidth(30);
-		mEventTable.getColumnModel().getColumn(7).setPreferredWidth(30);
+		final TableColumnModel columnModel = mEventTable.getColumnModel();
+		columnModel.getColumn(0).setPreferredWidth(70);// date/time
+		columnModel.getColumn(1).setPreferredWidth(150);// full text event type
+		columnModel.getColumn(2).setPreferredWidth(100);// player name
+		// The additional columns are values for coins and cards
+		for (int i = 3; i < (pMoneySystem == Game.MONEY_DEBT ? 8 : 9); i++)
+			columnModel.getColumn(i).setPreferredWidth(30);
 		return eventListPane;
 	}
 
