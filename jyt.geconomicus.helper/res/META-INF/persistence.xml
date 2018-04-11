@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<persistence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd" version="2.0" xmlns="http://java.sun.com/xml/ns/persistence">
+	<persistence-unit name="geco" transaction-type="RESOURCE_LOCAL">
+		<class>jyt.geconomicus.helper.Game</class>
+		<class>jyt.geconomicus.helper.Player</class>
+		<class>jyt.geconomicus.helper.Event</class>
+		<properties>
+			<property name="javax.persistence.jdbc.driver" value="org.h2.Driver" />
+			<property name="javax.persistence.jdbc.url" value="jdbc:h2:~/geco.h2" />
+			<property name="javax.persistence.jdbc.user" value="sa" />
+			<property name="javax.persistence.jdbc.password" value="" />
+
+			<!-- EclipseLink should create the database schema automatically -->
+			<property name="eclipselink.ddl-generation" value="create-or-extend-tables" />
+			<property name="eclipselink.ddl-generation.output-mode" value="database" />
+			<property name="eclipselink.logging.file"        value="gecoJPA.log" />
+
+			<!-- Allow eclipselink to handle zero ids -->
+			<property name="eclipselink.allow-zero-id" value="true" />
+			<!--property name="eclipselink.ddl-generation" value="none" /-->
+		</properties>
+	</persistence-unit>
+</persistence>
