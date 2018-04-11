@@ -57,3 +57,71 @@ Le programme suggère également quel(s) joueur(s) doi(ven)t mourir à ce tour p
 
 ![Morts suggérées, tableaux](captures/morts_sugg.jpg)
 
+Le remboursement d'un crédit est déclenché par un appui sur [r] sur le bon joueur, puis éventuellement modifier le montant du principal, les intérêts sont automatiquement calculés.
+
+![Remboursement de crédit](captures/rembours_credit.jpg)
+
+De la même manière, un défaut de paiement est déclenché par [d], puis on doit saisir les différents montants (le principal et intérêts peuvent être non nuls en cas par exemple de mort du joueur s'il n'a pas assez de monnaie pour rembourser son crédit), puis en saisissant les valeurs nécessaires, et en indiquant la situation du joueur s'il est bloqué pendant un tour :
+
+![Défaut de paiement](captures/defaut.jpg)
+
+La banque peut également se transformer en banque d'investissement en investissant les valeurs saisies et les intérêts gagnés (les valeurs monétaires investies dans l'échange de cartes doivent être limitées et comptées ici en « principal » de l'investissement). Ces valeurs investies sont retirées temporairement des gains de la banque, puisque dans ce cas on fait un inventaire des biens investis par la banque en fin de partie :
+
+![Banque d'investissement](captures/bank_invest.jpg)
+
+À noter que la dernière action peut être annulée (touche [z]). Une fois annulée, la touche [z] permet d'annuler la précédente et ainsi de suite. On peut donc même annuler toutes les actions de la partie (mais attention il n'y a pas de « redo » pour l'instant, même s'il ne serait pas très difficile de le rajouter, ça ne m'a pas vraiment semblé utile).
+
+En fin de partie, on fait l'inventaire des valeurs possédées par les joueurs en les faisant « quitter » la partie, puis on termine en indiquant l'événement « fin de partie » dans le menu.
+
+En monnaie libre, le nombre d'actions est plus limité puisqu'il n'y a pas de banque, voici un écran de fin de partie en monnaie libre :
+
+![Fin de partie en monnaie libre](captures/fin_ml.jpg)
+
+En revanche, il y a un écran supplémentaire disponible en monnaie libre par le menu « Vue », qui représente les valeurs courantes monétaires (faible, moyenne, forte, en attente) :
+
+![Aide valeurs](captures/aide_valeurs.jpg)
+
+Cet écran peut par exemple être affiché sur un rétro-projecteur pour que les joueurs puissent facilement savoir où ils en sont. Un simple clic sur chacune des couleurs permet de les changer en fonction de votre jeu. Attention, ce choix n'est pas persisant à la fermeture de cette fenêtre.
+Les valeurs « tournent » automatiquement à chaque nouveau tour, mais un clic sur l'écran (en-dehors des rectangles colorés) effectue aussi une rotation manuelle, au cas où.
+
+# Notes sur l'utilisation à plusieurs
+
+Pour commencer, le programme est basé sur une base de données locale, et on ne peut ouvrir qu'une seule partie en même temps sur un PC (tenter d'ouvrir une deuxième partie dans une deuxième instance du programme ne fonctionne pas).
+
+L'animateur du jeu et le banquier peuvent très bien utiliser deux instances du programme, une sur leur PC respectif, **à condition que leurs PC soient synchronisés en terme d'heures** :
+
+- au début de la partie, il suffit que l'un des deux exporte sa partie après avoir enregistré les joueurs pour que l'autre puisse récupérer les noms des joueurs en important le fichier de son camarade (transféré par clé USB, réseau, télépathie, que sais-je) :
+
+![Import de données](captures/import_noms.jpg)
+
+- en cours de partie, l'animateur note comme toujours ses données d'animation, morts/naissances avec valeurs associées, changements de tours, état des lieux des valeurs (monnaie et cartes valeurs) en fin de partie ; le banquier, lui, note uniquement ses données de banquier, attributions de crédits, remboursements, défauts de paiement, investissements de la banque, etc.
+- en fin de partie, le banquier peut exporter sa partie et l'animateur importe uniquement les données de la banque, les événements étant horodatés, ils devraient s'insérer au bon endroit dans la base de l'animateur.
+
+Lorsque la partie en monnaie libre commence, l'animateur peut simplement importer les noms des joueurs depuis la partie en monnaie dette qu'il a déjà en base.
+
+À noter que la base est actuellement une base H2 qui peut être accédée par la commande suivante (dans le répertoire où se trouve le jar) :
+
+>java -cp gecohelper.jar org.h2.tools.Console
+
+Cette commande lance un serveur web local qui permet de se connecter à la base locale (uniquement si vous avez des rudiments de SQL).
+Attention, tant que vous êtes connecté à la base dans votre navigateur, vous ne pourrez pas ouvrir de partie avec le programme d'aide au Ğeconomicus, et vice-versa. Cependant, la console H2 peut rester ouverte en permanence.
+
+# Fin de partie et statistiques
+
+Lorsque les deux parties (monnaie dette et monnaie libre) sont terminées, c'est le temps des statistiques. Il faut d'abord fermer le programme d'aide au Ğeconomicus puis lancer le programme de statistiques :
+
+>java -cp gecohelper.jar jyt.geconomicus.helper.ChooseGamesDialog
+
+On choisit alors les deux parties qui nous intéressent :
+
+![Choisir deux parties à comparer](captures/choisirpartie.jpg)
+
+
+
+# Pour les avides de ligne de commande
+
+Il existe aussi un programme en ligne de commande qui permet de voir les parties et de créer des événements, comme dans le programme graphique. C'est sûrement moins rapide, mais ça existe (surtout pour faire des tests - qui mériteraient d'être développés !).
+
+>java -cp gecohelper.jar jyt.geconomicus.helper.GeconomicusHelper
+
+Il vous suffit ensuite de suivre l'usage affiché par cette commande pour l'utiliser.
