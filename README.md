@@ -1,4 +1,4 @@
-Un programme pour aider à animer les jeux Ğeconomicus, y compris pour le banquier.
+Un programme pour aider à animer les jeux Ğeconomicus, y compris pour le banquier. Il s'agit pour l'instant uniquement d'un programme pour ordinateur supportant java (pas d'appli mobile).
 
 # Introduction
 
