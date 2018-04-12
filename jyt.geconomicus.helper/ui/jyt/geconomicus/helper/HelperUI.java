@@ -2,6 +2,7 @@ package jyt.geconomicus.helper;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -16,7 +17,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -44,6 +49,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -60,6 +66,7 @@ import javax.swing.border.BevelBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -211,6 +218,8 @@ public class HelperUI extends JFrame
 			synchronized (mPlayerTable)
 			{
 				final Player player = mPlayers.get(pRowIndex);
+				if (player == null)
+					return "";
 				switch (pColumnIndex)
 				{
 				case 0:
@@ -313,6 +322,7 @@ public class HelperUI extends JFrame
 	public final static String ACTION_QUIT_PLAYER = "q";// Quitte
 	public final static String ACTION_QUIT_APP = "qq";// Quitte l'appli
 	public final static String ACTION_REIMB_CREDIT = "r";// Remboursement
+	public final static String ACTION_DELETE_PLAYER = "s";// Supprimer
 	public final static String ACTION_NEW_TURN = "t";// Tour
 	public final static String ACTION_UNEXPECTED_MM_CHANGE = "v";// Vol de la banque 
 	public final static String ACTION_EXPORT = "x"; // eXport
@@ -413,22 +423,28 @@ public class HelperUI extends JFrame
 				dispatchEvent(new WindowEvent(HelperUI.this, WindowEvent.WINDOW_CLOSING));
 			else if (ACTION_EXPORT.equals(pEvent.getActionCommand()))
 			{
-				try
+				final JFileChooser fc = new JFileChooser();
+				fc.setFileFilter(new FileNameExtensionFilter("xml", "xml"));
+				if (fc.showSaveDialog(HelperUI.this) == JFileChooser.APPROVE_OPTION)
 				{
-					JAXBContext jc = JAXBContext.newInstance(Game.class);
-					Marshaller marshaller = jc.createMarshaller();
-					marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-					marshaller.marshal(mGame, System.out);
-				}
-				catch (PropertyException e)
-				{
-					JOptionPane.showMessageDialog(rootPane, "Erreur durant l'export", "Erreur", JOptionPane.ERROR_MESSAGE);
-					e.printStackTrace();
-				}
-				catch (JAXBException e)
-				{
-					JOptionPane.showMessageDialog(rootPane, "Erreur durant l'export", "Erreur", JOptionPane.ERROR_MESSAGE);
-					e.printStackTrace();
+					File toExport = fc.getSelectedFile();
+					try
+					{
+						JAXBContext jc = JAXBContext.newInstance(Game.class);
+						Marshaller marshaller = jc.createMarshaller();
+						marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+						marshaller.marshal(mGame, toExport);
+					}
+					catch (PropertyException e)
+					{
+						JOptionPane.showMessageDialog(rootPane, "Erreur durant l'export", "Erreur", JOptionPane.ERROR_MESSAGE);
+						e.printStackTrace();
+					}
+					catch (JAXBException e)
+					{
+						JOptionPane.showMessageDialog(rootPane, "Erreur durant l'export", "Erreur", JOptionPane.ERROR_MESSAGE);
+						e.printStackTrace();
+					}
 				}
 			}
 			else if (ACTION_IMPORT.equals(pEvent.getActionCommand()))
@@ -479,6 +495,32 @@ public class HelperUI extends JFrame
 					}
 					else if (ACTION_TECH_BREAKTROUGH.equals(pEvent.getActionCommand()))
 						createNewEvent(player, EventType.XTECHNOLOGICAL_BREAKTHROUGH);
+					else if (ACTION_DELETE_PLAYER.equals(pEvent.getActionCommand()))
+					{
+						if (JOptionPane.showConfirmDialog(HelperUI.this, "!!! ATTENTION !!!\nCette action va supprimer définitivement le joueur ainsi que toutes ses actions.\nSi un joueur quitte simplement la partie il suffit de lui faire quitter la partie,\nLa seule utilisation valide est suite à un import de joueurs depuis une autre partie, et le joueur en question ne joue pas dans cette nouvelle partie.\nVoulez-vous vraiment continuer ?", "Suppression définitive de joueur", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION)
+						{
+							if (JOptionPane.showConfirmDialog(HelperUI.this, "ATTENTION, CETTE ACTION EST IRRÉVERSIBLE !!!\nÊtes-vous vraiment sûr de vouloir SUPPRIMER totalement ce joueur ?", "Suppression définitive de joueur", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION)
+							{
+								synchronized (mPlayerTable)
+								{
+									mEntityManager.getTransaction().begin();
+									for (Event event : new ArrayList<>(mGame.getEvents()))
+									{
+										if (event.getPlayer() == player)
+										{
+											mGame.removeEvent(event);
+											mEvents.remove(event);
+										}
+									}
+									mPlayers.remove(player);
+									mGame.removePlayer(player);
+									mGame.recomputeAll(null);
+									mEntityManager.getTransaction().commit();
+									refreshUI();
+								}
+							}
+						}
+					}
 					else
 					{
 						final boolean cannotPay = ACTION_CANNOT_PAY.equals(pEvent.getActionCommand());
@@ -695,6 +737,7 @@ public class HelperUI extends JFrame
 		createAction(null, "", menuGame, "Import...", ACTION_IMPORT, false);
 		createAction(null, "", menuGame, "Changer la description...", ACTION_ADDITIONAL_COMMENTS, false);
 		createAction(null, "", menuGame, "Quitter", ACTION_QUIT_APP, false);
+		createAction(null, "", mMenuPlayer, "Supprimer définitivement un joueur", ACTION_DELETE_PLAYER, false);
 		menuBar.add(menuGame);
 		menuBar.add(mMenuPlayer);
 		final JMenu menuView = new JMenu("Vue");
@@ -722,6 +765,43 @@ public class HelperUI extends JFrame
 		});
 		menuView.add(mMenuViewMoneyHelper);
 		menuBar.add(menuView);
+		final JMenu menuHelp = new JMenu("Aide");
+		final JMenuItem menuItemWebsite = new JMenuItem("Site Web");
+		menuItemWebsite.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent pEvent)
+			{
+				try
+				{
+					Desktop.getDesktop().browse(new URL("https://github.com/jytou/geconomicus_helper/blob/master/README.md").toURI());
+				}
+				catch (MalformedURLException e)
+				{
+					e.printStackTrace();
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+				catch (URISyntaxException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		});
+		menuHelp.add(menuItemWebsite);
+		final JMenuItem menuItemAbout = new JMenuItem("À propos");
+		menuItemAbout.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent pEvent)
+			{
+				JOptionPane.showMessageDialog(HelperUI.this, "Programme d'aide à l'animateur et banquier de Ğeconomicus.\n\nVersion 0.9. 2018/04/12", "À propos", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+		menuHelp.add(menuItemAbout);
+		menuBar.add(menuHelp);
 		mainPanel.add(toolbar, new GridBagConstraints(0, 1, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		setJMenuBar(menuBar);
 
