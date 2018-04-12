@@ -18,7 +18,13 @@ Le tout est sauvegardé en temps réel dans une base de données locale en cas d
 
 # Lancement du programme
 
-Récupérer 
+Récupérer [le dernier jar](https://github.com/jytou/geconomicus_helper/releases) dans les releases. Assurez-vous de bien avoir Java installé sur votre machine.
+
+Lancer le jar en tapant simplement
+
+>java -jar gecohelper.jar
+
+Selon votre configuration, il suffit même peut-être de double-cliquer sur le fichier pour qu'il se lance.
 
 # Présentation des écrans
 
