@@ -153,6 +153,14 @@ Pour sauvegarder les parties, plusieurs options :
 
 Ceci dit, en cas de plantage PC irrécupérable (crash de disque dur, etc), on n'est pas mieux lottis qu'avec un tableau excel…
 
+# Autres actions
+
+La rupture technologique est prévue, déclenchable depuis le menu Joueur/Rupture Tekno. Les valeurs des événements suivants prennent en compte la division des valeurs par 2.
+
+La description (commentaires) du jeu est également modifiable depuis le menu Partie.
+
+En cas d'irrégularité dans les affichage (ce qui ne devrait pas arriver, mais bon), il est possible de demander à recalculer toutes les stats à partir des événements enregistrés, c'est le menu Partie/Recalcul des événements.
+
 # Pour les avides de ligne de commande
 
 Il existe aussi un programme en ligne de commande qui permet de voir les parties et de créer des événements, comme dans le programme graphique. C'est sûrement moins rapide, mais ça existe (surtout pour faire des tests - qui mériteraient d'être développés !).
@@ -173,3 +181,13 @@ Je n'ai pas utilisé de librairie pour les graphes, qui étaient simples mais qu
 Le projet est un projet eclipse, ça devrait tourner sur un peu n'importe quelle configuration.
 
 La couche métier est séparée (elle est utilisée par le programme principal, le programme de stats et la CLI) et pourrait être utilisée par d'autres au besoin.
+
+# Améliorations
+
+- Améliorer l'import (pouvoir importer une partie complète, par exemple), c'est simple mais pas encore fait,
+- faire un splash screen,
+- améliorer les écrans, visuellement,
+- afficher les valeurs faibles/moyennes/fortes en cours (mais elles changent uniquement en cas de rupture technologique, ce qui est assez rare pour qu'on puisse s'en passer à mon avis),
+- internationaliser les messages (qui sont actuellement en français vu que le public susceptible d'utiliser l'appli aujourd'hui est essentiellement francophone).
+
+N'hésitez pas à faire des *issues*.
