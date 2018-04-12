@@ -199,6 +199,7 @@ La couche métier est séparée (elle est utilisée par le programme principal, 
 - faire un splash screen,
 - améliorer les écrans, visuellement,
 - afficher les valeurs faibles/moyennes/fortes en cours (mais elles changent uniquement en cas de rupture technologique, ce qui est assez rare pour qu'on puisse s'en passer à mon avis),
+- ajouter un minuteur (c'est vraiment assez peu indispensable, on va faire sans pour l'instant),
 - internationaliser les messages (qui sont actuellement en français vu que le public susceptible d'utiliser l'appli aujourd'hui est essentiellement francophone).
 
 N'hésitez pas à faire des *issues*.
