@@ -107,7 +107,8 @@ L'animateur du jeu et le banquier peuvent très bien utiliser deux instances du 
 
 ![Import de données](captures/import_noms.jpg)
 
-- en cours de partie, l'animateur note comme toujours ses données d'animation, morts/naissances avec valeurs associées, changements de tours, état des lieux des valeurs (monnaie et cartes valeurs) en fin de partie ; le banquier, lui, note uniquement ses données de banquier, attributions de crédits, remboursements, défauts de paiement, investissements de la banque, etc.
+- en cours de partie, l'animateur note comme toujours ses données d'animation, morts/naissances avec valeurs associées, changements de tours, état des lieux des valeurs (monnaie et cartes valeurs) en fin de partie,
+- le banquier, lui, note uniquement ses données de banquier, attributions de crédits, remboursements, défauts de paiement, investissements de la banque, etc., il doit aussi noter les inventaires monétaires des morts pour que sa masse monétaire ne soit pas faussée (lors de l'import des événements du banquier dans la partie de l'animateur, ces événements « non bancaires » seront ignorés),
 - en fin de partie, le banquier peut exporter sa partie et l'animateur importe uniquement les données de la banque, les événements étant horodatés, ils devraient s'insérer au bon endroit dans la base de l'animateur.
 
 Lorsque la partie en monnaie libre commence, l'animateur peut simplement importer les noms des joueurs depuis la partie en monnaie dette qu'il a déjà en base.
