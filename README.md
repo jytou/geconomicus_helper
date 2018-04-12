@@ -39,7 +39,8 @@ En créant une partie, on se retrouve avec un écran vide, mais déjà avec plei
 Les différents boutons indiquent les actions disponibles (mis à part quelques unes disponibles uniquement par menu car peu courantes - fin de partie, import/export, changement de description de la partie, rupture technologique). Les raccourcis clavier fonctionnent partout dans l'écran (pas de Ctrl ou Alt, c'est directement la touche concernée qui déclenche l'action), attention si vous avez un chat qui se balade près de l'ordi, il pourrait jouer la partie à lui tout seul !
 Une barre de statut en bas de l'écran est mise à jour en temps réel et donne des indications importantes sur la partie, masse monétaire, nombre de tours, etc.
 
-En début de partie, on ajoute les différents joueurs, en appuyant simplement sur [j], on tape leur nom puis [entrée]. Ensuite, il suffit de se balader avec les flèches dans la liste ou de sélectionner le joueur désiré et d'appuyer sur la touche [c] pour indiquer que la banque lui octroie un crédit puis [entrée] directement s'il s'agit d'un crédit de 3 (par défaut) :
+En début de partie, on ajoute les différents joueurs, en appuyant simplement sur [j], on tape leur nom puis [entrée]. **Bien veiller à avoir des noms de joueurs uniques** (quitte à mettre l'initale de leur nom ou tout autre identifiant permettant de distinguer les deux), sinon comme les tableaux sont triés par ordre alphabétique, il sera impossible de distinguer les deux joueurs.
+Ensuite, il suffit de se balader avec les flèches dans la liste ou de sélectionner le joueur désiré et d'appuyer sur la touche [c] pour indiquer que la banque lui octroie un crédit puis [entrée] directement s'il s'agit d'un crédit de 3 (par défaut) :
 
 ![Nouveau crédit](captures/nouveau_credit.jpg)
 
@@ -155,11 +156,15 @@ Ceci dit, en cas de plantage PC irrécupérable (crash de disque dur, etc), on n
 
 # Autres actions
 
-La rupture technologique est prévue, déclenchable depuis le menu Joueur/Rupture Tekno. Les valeurs des événements suivants prennent en compte la division des valeurs par 2.
+- La rupture technologique est prévue, déclenchable depuis le menu Joueur/Rupture Tekno. Les valeurs des événements suivants prennent en compte la division des valeurs par 2.
 
-La description (commentaires) du jeu est également modifiable depuis le menu Partie.
+- La description (commentaires) du jeu est également modifiable depuis le menu Partie.
 
-En cas d'irrégularité dans les affichage (ce qui ne devrait pas arriver, mais bon), il est possible de demander à recalculer toutes les stats à partir des événements enregistrés, c'est le menu Partie/Recalcul des événements.
+- En cas d'irrégularité dans les affichage (ce qui ne devrait pas arriver, mais bon), il est possible de demander à recalculer toutes les stats à partir des événements enregistrés, c'est le menu Partie/Recalcul des événements.
+
+- En cas de hold-up de la banque ou autre événement imprévu, il est possible d'ajuster manuellement la masse monétaire.
+
+- Il est possible de supprimer totalement un joueur (et ses actions associées), à utiliser avec parcimonie. Ce peut être utile dans le cas où on importe les joueurs du jeu en monnaie dette dans le jeu en monnaie libre, mais un joueur a décidé de ne pas participer au deuxième jeu et ne doit donc tout simplement pas figurer dans le deuxième jeu (ça risque de fausser les données…). Dans le cas où une personne en remplace une autre d'une partie à l'autre, il est conseillé de changer son nom en fin de partie pour que les noms correspondent : en effet les statistiques se basent sur le nom pour identifier les joueurs.
 
 # Pour les avides de ligne de commande
 
