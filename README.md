@@ -16,7 +16,13 @@ L'utilisation est simple :
 L'accent est mis sur la rapidité d'utilisation avec des boutons accessibles (les actions sont également accessibles via des menus) et surtout des raccourcis clavier permettant d'effectuer les actions rapidement (un simple remboursement d'intérêts se fait en une touche, un nouveau crédit par défaut en 2 touches).
 Le tout est sauvegardé en temps réel dans une base de données locale en cas de crash et est exportable en XML (il serait aussi facile d'exporter du CSV pour les inconditionnels d'imports dans des tableurs).
 
+# Lancement du programme
+
+Récupérer 
+
 # Présentation des écrans
+
+Note : ces copies d'écrans ne sont **pas** issues de parties réelles, mais sont réalistes et devraient correspondre grosso-modo à ce à quoi devraient ressembler de vraies parties.
 
 Choix d'ouvrir une partie existante :
 
@@ -103,7 +109,7 @@ Lorsque la partie en monnaie libre commence, l'animateur peut simplement importe
 
 >java -cp gecohelper.jar org.h2.tools.Console
 
-Cette commande lance un serveur web local qui permet de se connecter à la base locale (uniquement si vous avez des rudiments de SQL).
+Cette commande lance un serveur web local qui permet de se connecter à la base locale (uniquement si vous avez des rudiments de SQL). La base est localisée dans la racine de votre compte et se nomme « geco.h2 ».
 Attention, tant que vous êtes connecté à la base dans votre navigateur, vous ne pourrez pas ouvrir de partie avec le programme d'aide au Ğeconomicus, et vice-versa. Cependant, la console H2 peut rester ouverte en permanence.
 
 # Fin de partie et statistiques
@@ -112,11 +118,40 @@ Lorsque les deux parties (monnaie dette et monnaie libre) sont terminées, c'est
 
 >java -cp gecohelper.jar jyt.geconomicus.helper.ChooseGamesDialog
 
-On choisit alors les deux parties qui nous intéressent :
+On choisit alors les deux parties qui nous intéressent (il est techniquement possible d'avoir plus de parties, le jour où le programme intègre par exemple d'autres types de monnaie) :
 
-![Choisir deux parties à comparer](captures/choisirpartie.jpg)
+![Choisir deux parties à comparer](captures/compareparties.jpg)
 
+La fenêtre principale peut directement être projetée à l'audience et contient toutes les statistiques sur les deux parties. Elle s'adapte à la taille de l'écran pour maximiser la place occupée afin d'être la plus visible possible.
 
+Le premier onglet est la partie en monnaie-dette sans la banque, avec la moyenne et l'écart-type (en pourcentage de la moyenne) :
+
+![Statistiques de la partie en monnaie-dette sans la banque](captures/statmdssbank.jpg)
+
+L'onglet suivant inclut cette fois la banque, avec la même échelle pour l'écart-type, afin qu'on le voie bien bouger :
+
+![Statistiques de la partie en monnaie-dette avec la banque](captures/statmdavecbank.jpg)
+
+L'onglet suivant représente l'évolution de la masse monétaire au cours de la partie, où l'on voit bien les moments d'asséchement monétaire et les défauts de paiement souvent dûs à un manque de monnaie :
+
+![Statistiques de la masse monétaire](captures/statmm.jpg)
+
+On passe ensuite à la partie en monnaie libre :
+
+![Statistiques de la partie en monnaie libre](captures/statml.jpg)
+
+Et enfin, le dernier onglet aggrège les résultats des deux parties (ou plus !), qui permet de comparer d'un coup d'œil les résultats, en particulier la moyenne de création de valeurs et la différence d'écart-type entre les deux parties :
+
+![Statistiques aggrégées](captures/stataggreges.jpg)
+
+# Sauvegardes
+
+Pour sauvegarder les parties, plusieurs options :
+
+- sauvegarder l'intégralité de la base de données, qui est un fichier dans la racine de votre compte, qui se nomme geco.h2, **veiller à quitter le programme avant de sauvegarder ce fichier**,
+- sauvegarder chaque partie en faisant un export en xml, pourquoi pas à chaque tour sur une clé USB pour les plus paranos.
+
+Ceci dit, en cas de plantage PC irrécupérable (crash de disque dur, etc), on n'est pas mieux lottis qu'avec un tableau excel…
 
 # Pour les avides de ligne de commande
 
@@ -125,3 +160,16 @@ Il existe aussi un programme en ligne de commande qui permet de voir les parties
 >java -cp gecohelper.jar jyt.geconomicus.helper.GeconomicusHelper
 
 Il vous suffit ensuite de suivre l'usage affiché par cette commande pour l'utiliser.
+
+# Note pour les programmeurs
+
+Ce programme est écrit en java et swing de bout en bout, pas vraiment de patterns/frameworks vu sa simplicité, j'ai fait au plus simple et au plus vite. Les seules librairies utilisées sont :
+
+- h2 pour la persistance (ce qui pourrait aisément être changé),
+- eclipselink pour la persistance en base,
+- JAXB (qui est maintenant intégré dans java) pour l'import/export XML.
+
+Je n'ai pas utilisé de librairie pour les graphes, qui étaient simples mais que je voulais customiser sans me prendre la tête.
+Le projet est un projet eclipse, ça devrait tourner sur un peu n'importe quelle configuration.
+
+La couche métier est séparée (elle est utilisée par le programme principal, le programme de stats et la CLI) et pourrait être utilisée par d'autres au besoin.
