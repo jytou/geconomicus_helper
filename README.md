@@ -87,7 +87,7 @@ En revanche, il y a un écran supplémentaire disponible en monnaie libre par le
 
 ![Aide valeurs](captures/aide_valeurs.jpg)
 
-Cet écran peut par exemple être affiché sur un rétro-projecteur pour que les joueurs puissent facilement savoir où ils en sont. Un simple clic sur chacune des couleurs permet de les changer en fonction de votre jeu. Attention, ce choix n'est pas persisant à la fermeture de cette fenêtre.
+Cet écran peut par exemple être affiché sur un rétro-projecteur pour que les joueurs puissent facilement savoir où ils en sont. Un simple clic sur chacune des couleurs permet de les changer en fonction de votre jeu. Attention, ce choix n'est pas persistant à la fermeture de cette fenêtre.
 Les valeurs « tournent » automatiquement à chaque nouveau tour, mais un clic sur l'écran (en-dehors des rectangles colorés) effectue aussi une rotation manuelle, au cas où.
 
 # Notes sur l'utilisation à plusieurs
