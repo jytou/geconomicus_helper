@@ -204,3 +204,18 @@ La couche métier est séparée (elle est utilisée par le programme principal, 
 - internationaliser les messages (qui sont actuellement en français vu que le public susceptible d'utiliser l'appli aujourd'hui est essentiellement francophone).
 
 N'hésitez pas à faire des *issues*.
+
+# Nouvelle version
+
+Comme je n'ai pas le temps de mettre à jour ce fichier ce soir, voici quelques améliorations dans la version d'aujourd'hui :
+
+- corrections de multiples bugs dans les calculs de gains des joueurs et de la banque,
+- correction de l'import d'événements particuliers qui ne triait pas les événements dans le bon ordre ensuite,
+- l'import d'une partie complète est maintenant possible dans la boîte de dialogue de choix de la partie, on ouvre ensuite cette partie importée,
+- la fenêtre principale de saisie des valeurs a été améliorée pour afficher des labels plus pertinents en fonction des cas (remboursement, défaut de paiement, mort, etc),
+- on peut maintenant éditer les saisies des événements, pratique en cas d'erreur de saisie,
+- le programme montre des avertissements si des noms de joueurs sont trop proches (préférer par exemple « Joueur M » et « Joueur A » plutôt que « Joueur M » et « Joueur »),
+- la gestion des morts a été améliorée/corrigée,
+- il est possible de saisir une valeur négative lors de la mise à jour de la masse monétaire suite à un événement imprévu,
+- l'affichage de l'écart-type dans les stats va maintenant jusqu'à 150%, j'espère que ça sera suffisant,
+- un nouveau graphique avec la version « corrigée » (-8 cartes pour les joueurs et -7 en monnaie libre).
