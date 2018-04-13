@@ -11,11 +11,9 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -98,20 +96,6 @@ public class ImportDialog extends JDialog
 		sourcePanel.add(xmlFileTF, new GridBagConstraints(1, 1, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		final JButton chooseXmlFileButton = new JButton("Ouvrir...");
 		sourcePanel.add(chooseXmlFileButton, new GridBagConstraints(2, 1, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-		chooseXmlFileButton.addActionListener(new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent pEvent)
-			{
-				final JFileChooser fc = new JFileChooser();
-				fc.setFileFilter(new FileNameExtensionFilter("xml", "xml"));
-				if (fc.showOpenDialog(ImportDialog.this) == JFileChooser.APPROVE_OPTION)
-				{
-					xmlFileTF.setText(fc.getSelectedFile().getAbsolutePath());
-					sourceGroup.setSelected(rbFromXml.getModel(), true);
-				}
-			}
-		});
 		sourceGroup.setSelected(rbFromDB.getModel(), true);
 		mainPanel.add(sourcePanel, new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
@@ -217,6 +201,22 @@ public class ImportDialog extends JDialog
 		importGameButton.addActionListener(importGameAction);
 		importGameButton.setMnemonic('i');
 		buttonsPanel.add(importGameButton);
+
+		chooseXmlFileButton.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent pEvent)
+			{
+				final JFileChooser fc = new JFileChooser();
+				fc.setFileFilter(new FileNameExtensionFilter("xml", "xml"));
+				if (fc.showOpenDialog(ImportDialog.this) == JFileChooser.APPROVE_OPTION)
+				{
+					xmlFileTF.setText(fc.getSelectedFile().getAbsolutePath());
+					sourceGroup.setSelected(rbFromXml.getModel(), true);
+					importGameButton.setEnabled(true);
+				}
+			}
+		});
 
 		final JButton cancelButton = new JButton("Annuler");
 		final Action cancelAction = new AbstractAction()

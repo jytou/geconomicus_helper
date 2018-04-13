@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,6 +26,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -38,6 +40,11 @@ import javax.swing.ListCellRenderer;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.PropertyException;
+import javax.xml.bind.Unmarshaller;
 
 public class ChooseGameDialog extends JFrame
 {
@@ -111,7 +118,81 @@ public class ChooseGameDialog extends JFrame
 			}
 		});
 		existingGamesPanel.add(deleteGameButton, new GridBagConstraints(1, 1, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		mainPanel.add(existingGamesPanel, new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, insets, 0, 0));
+		mainPanel.add(existingGamesPanel, new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, insets, 5, 5));
+
+		final JPanel importGamesPanel = new JPanel(new GridBagLayout());
+		importGamesPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), "Importer une partie"));
+		final JLabel importXmlFileLabel = new JLabel("Importer depuis un fichier XML");
+		importGamesPanel.add(importXmlFileLabel, new GridBagConstraints(0, 1, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		final JTextField xmlFileTF = new JTextField();
+		importGamesPanel.add(xmlFileTF, new GridBagConstraints(1, 1, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+		final JButton chooseXmlFileButton = new JButton("Ouvrir...");
+		importGamesPanel.add(chooseXmlFileButton, new GridBagConstraints(2, 1, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		final JButton importGameButton = new JButton("Importer !");
+		final Action importGameAction = new AbstractAction()
+		{
+			@Override
+			public void actionPerformed(ActionEvent pEvent)
+			{
+				// import the game
+				Game importedGame = null;
+				// Import from XML
+				try
+				{
+					JAXBContext jc = JAXBContext.newInstance(Game.class);
+					Unmarshaller unmarshaller = jc.createUnmarshaller();
+					importedGame = (Game)unmarshaller.unmarshal(new File(xmlFileTF.getText()));
+				}
+				catch (PropertyException e)
+				{
+					JOptionPane.showMessageDialog(rootPane, "Erreur durant l'import : " + e.getClass().getName() + " (" + e.getMessage() + ")", "Erreur", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				catch (JAXBException e)
+				{
+					JOptionPane.showMessageDialog(rootPane, "Erreur durant l'import : " + e.getClass().getName() + " (" + e.getMessage() + ")", "Erreur", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				if (importedGame != null)
+				{
+					pEntityManager.getTransaction().begin();
+					try
+					{
+						importedGame.recomputeAll(null);
+						pEntityManager.persist(importedGame);
+						pEntityManager.getTransaction().commit();
+						new HelperUI(pEntityManager, importedGame);
+						setVisible(false);
+					}
+					catch (Throwable e)
+					{
+						pEntityManager.getTransaction().rollback();
+						JOptionPane.showMessageDialog(ChooseGameDialog.this, "Une erreur est survenue : " + e.getClass().getName() + "(" + e.getMessage() + ")", "", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+		};
+		importGameButton.setEnabled(false);
+		importGameButton.addActionListener(importGameAction);
+		importGameButton.setMnemonic('i');
+		chooseXmlFileButton.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent pEvent)
+			{
+				final JFileChooser fc = new JFileChooser();
+				fc.setFileFilter(new FileNameExtensionFilter("xml", "xml"));
+				if (fc.showOpenDialog(ChooseGameDialog.this) == JFileChooser.APPROVE_OPTION)
+				{
+					xmlFileTF.setText(fc.getSelectedFile().getAbsolutePath());
+					importGameButton.setEnabled(true);
+				}
+			}
+		});
+
+		importGamesPanel.add(importGameButton, new GridBagConstraints(3, 1, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+
+		mainPanel.add(importGamesPanel, new GridBagConstraints(0, 1, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, insets, 5, 5));
 
 		final JPanel newGamePanel = new JPanel(new GridBagLayout());
 		newGamePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), "Nouvelle partie"));
@@ -184,7 +265,7 @@ public class ChooseGameDialog extends JFrame
 		newGameButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK), "newGame");
 		newGameButton.getActionMap().put("newGame", newGameAction);
 		newGameButton.addActionListener(newGameAction);
-		mainPanel.add(newGamePanel, new GridBagConstraints(0, 10, 2, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, insets, 0, 0));
+		mainPanel.add(newGamePanel, new GridBagConstraints(0, 10, 2, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, insets, 5, 5));
 
 		final Action cancelAction = new AbstractAction()
 		{

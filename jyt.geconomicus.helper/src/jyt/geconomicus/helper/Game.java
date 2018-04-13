@@ -63,7 +63,7 @@ public class Game implements Serializable
 	@XmlElementWrapper
 	@XmlElement(name="event")
 	@OneToMany(mappedBy="game",cascade={CascadeType.PERSIST, CascadeType.REMOVE},orphanRemoval=true)
-	@OrderBy("id")
+	@OrderBy("tstamp")
 	private Collection<Event> events = new ArrayList<Event>();
 
 	@SuppressWarnings("unused")
@@ -265,6 +265,7 @@ public class Game implements Serializable
 
 	public void investMoney(int pPrincipal)
 	{
+		moneyMass += pPrincipal;
 		moneyInvestBank += pPrincipal;
 		interestGained -= pPrincipal;
 	}

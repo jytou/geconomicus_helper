@@ -239,11 +239,11 @@ public class Event implements Serializable
 			// Nothing to do here
 			break;
 		case SIDE_INVESTMENT:
-			game.investMoney(principal);
+			game.investMoney(interest);
 			game.investCards(weakCards + 2 * mediumCards + 4 * strongCards);
 			break;
 		case ASSESSMENT_FINAL:
-			game.gainInterest(principal);
+			game.gainInterest(interest);
 			game.seizeValues(weakCards, mediumCards, strongCards);
 			break;
 		default:

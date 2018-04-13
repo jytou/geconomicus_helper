@@ -77,17 +77,21 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 
-import jyt.geconomicus.helper.CreditActionDialog.Fields;
+import jyt.geconomicus.helper.CreditActionDialog.Purpose;
 import jyt.geconomicus.helper.Event.EventType;
 
 public class HelperUI extends JFrame
 {
+	protected static final String RELEASE_DATE = "2018/04/13";
+	protected static final String VERSION_NUMBER = "0.9.1";
+
 	private final static Random sRand = new SecureRandom();
 
 	private static final int PLAYER_INACTIVE = -1;
 	private static final int PLAYER_OK = 1;
 	private static final int PLAYER_NEEDS_BANK = 0;
 	private static final int PLAYER_IN_PRISON = 2;
+	private static final int PLAYER_IN_WARNING = 3;
 
 	private class EventTableModelDebtMoney extends AbstractTableModel
 	{
@@ -177,6 +181,76 @@ public class HelperUI extends JFrame
 		{
 			return mMoneySystem == Game.MONEY_DEBT ? COL_NAMES_DEBT_MONEY[pColumn] : COL_NAMES_LIBRE_MONEY[pColumn];
 		}
+
+		@Override
+		public boolean isCellEditable(int pRowIndex, int pColumnIndex)
+		{
+			return pColumnIndex >= 3;
+		}
+
+		@Override
+		public Class<?> getColumnClass(int pColumnIndex)
+		{
+			return pColumnIndex >= 3 ? Integer.class : String.class;
+		}
+
+		@Override
+		public void setValueAt(Object pAValue, int pRowIndex, int pColumnIndex)
+		{
+			synchronized (mEventTable)
+			{
+				super.setValueAt(pAValue, pRowIndex, pColumnIndex);
+				Event event = mEvents.get(mEvents.size() - pRowIndex - 1);
+				int value = ((Integer)pAValue).intValue();
+				mEntityManager.getTransaction().begin();
+
+				if (mMoneySystem == Game.MONEY_DEBT)
+					switch (pColumnIndex)
+					{
+					case 3:
+						event.setInterest(value);
+						break;
+					case 4:
+						event.setPrincipal(value);
+						break;
+					case 5:
+						event.setWeakCards(value);
+						break;
+					case 6:
+						event.setMediumCards(value);
+						break;
+					case 7:
+						event.setStrongCards(value);
+						break;
+					}
+				else
+					switch (pColumnIndex)
+					{
+					case 3:
+						event.setWeakCoins(value);
+						break;
+					case 4:
+						event.setMediumCoins(value);
+						break;
+					case 5:
+						event.setStrongCoins(value);
+						break;
+					case 6:
+						event.setWeakCards(value);
+						break;
+					case 7:
+						event.setMediumCards(value);
+						break;
+					case 8:
+						event.setStrongCards(value);
+						break;
+					}
+
+				mGame.recomputeAll(null);
+				mEntityManager.getTransaction().commit();
+				refreshUI();
+			}
+		}
 	}
 
 	private class ColorRenderer extends JLabel implements TableCellRenderer
@@ -195,7 +269,35 @@ public class HelperUI extends JFrame
 			if (pColumn != 0)
 				return mDefault.getTableCellRendererComponent(pTable, pValue, pIsSelected, pHasFocus, pRow, pColumn);
 			int value = ((Integer)pValue).intValue();
-			setBackground(value == PLAYER_INACTIVE ? Color.gray : value == PLAYER_NEEDS_BANK ? Color.red : value == PLAYER_IN_PRISON ? Color.lightGray : Color.green);
+			Color color = Color.black;
+			setToolTipText("");
+			switch (value)
+			{
+			case PLAYER_INACTIVE:
+				setToolTipText("Joueur inactif");
+				color = Color.gray;
+				break;
+			case PLAYER_NEEDS_BANK:
+				setToolTipText("Le joueur doit payer ses intérêts à la banque");
+				color = Color.red;
+				break;
+			case PLAYER_IN_WARNING:
+				setToolTipText(mPlayersInWarning.get(mPlayers.get(pRow).getId()));
+				color = Color.orange;
+				break;
+			case PLAYER_IN_PRISON:
+				setToolTipText("Joueur en prison pour ce tour");
+				color = Color.lightGray;
+				break;
+			case PLAYER_OK:
+				setToolTipText("Joueur OK");
+				color = Color.green;
+				break;
+
+			default:
+				break;
+			}
+			setBackground(color);
 			return this;
 		}
 	}
@@ -223,7 +325,10 @@ public class HelperUI extends JFrame
 				switch (pColumnIndex)
 				{
 				case 0:
-					return player.isActive() ? (player.hasVisitedBank() ? (mPlayersInPrison.contains(player.getId()) ? PLAYER_IN_PRISON : PLAYER_OK) : PLAYER_NEEDS_BANK) : PLAYER_INACTIVE;
+					if (mPlayersInWarning.containsKey(player.getId()))
+						return PLAYER_IN_WARNING;
+					else
+						return player.isActive() ? (player.hasVisitedBank() ? (mPlayersInPrison.contains(player.getId()) ? PLAYER_IN_PRISON : PLAYER_OK) : PLAYER_NEEDS_BANK) : PLAYER_INACTIVE;
 				case 1:
 					return player.getName();
 				case 2:
@@ -299,6 +404,7 @@ public class HelperUI extends JFrame
 
 	private Game mGame = null;
 	private List<Player> mPlayers = new ArrayList<>();
+	private Map<Integer, String> mPlayersInWarning = new HashMap<>();
 	private Map<Integer, StringBuilder> mCreditHistory = new HashMap<>();
 	private Set<Integer> mPlayersInPrison = new HashSet<>();
 	private Map<Integer, Integer> mPlayerAges = new HashMap<>();
@@ -352,6 +458,7 @@ public class HelperUI extends JFrame
 				{
 					mPlayers.add(newPlayer);
 					createNewEvent(newPlayer, EventType.JOIN);
+					mNonDeadPlayers.add(newPlayer.getId());
 				}
 			}
 			else if (ACTION_NEW_TURN.equals(pEvent.getActionCommand()))
@@ -397,25 +504,27 @@ public class HelperUI extends JFrame
 			}
 			else if (ACTION_UNEXPECTED_MM_CHANGE.equals(pEvent.getActionCommand()))
 			{
-				final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Changement imprévu de masse monétaire", 0, false, Fields.PRINCIPAL_ONLY);
+				final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Changement imprévu de masse monétaire", 0, Purpose.MONEY_MASS_CHANGE);
 				dialog.setVisible(true);
 				final int principal = dialog.getPrincipal();
-				if (principal > 0)
+				if (dialog.wasApplied())
 					createNewEventDebtMoney(null, EventType.MM_CHANGE, principal, 0, 0, 0, 0);
 			}
 			else if (ACTION_INVEST_BANK.equals(pEvent.getActionCommand()))
 			{
-				final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Investissement de la banque", 0, false, Fields.INTEREST_CARDS);
+				final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Investissement de la banque", 0, Purpose.BANK_INVESTMENT);
 				dialog.setVisible(true);
 				if (dialog.wasApplied())
-					createNewEventDebtMoney(null, EventType.SIDE_INVESTMENT, dialog.getPrincipal(), 0, dialog.getWeakCards(), dialog.getMediumCards(), dialog.getStrongCards());
+				// Note that exceptionally, the "principal" in here is really an interest earned by the bank that is reinvested - it has to be counted as "interest" as it is not debt money
+					createNewEventDebtMoney(null, EventType.SIDE_INVESTMENT, 0, dialog.getPrincipal(), dialog.getWeakCards(), dialog.getMediumCards(), dialog.getStrongCards());
 			}
 			else if (ACTION_ASSESSMENT_BANK.equals(pEvent.getActionCommand()))
 			{
-				final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Inventaire final de la banque", 0, false, Fields.INTEREST_CARDS);
+				final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Inventaire final de la banque", 0, Purpose.BANK_INVESTMENT);
 				dialog.setVisible(true);
 				if (dialog.wasApplied())
-					createNewEventDebtMoney(null, EventType.ASSESSMENT_FINAL, dialog.getPrincipal(), 0, dialog.getWeakCards(), dialog.getMediumCards(), dialog.getStrongCards());
+					// Note that exceptionally, the "principal" in here is really an interest earned by the bank that is reinvested - it has to be counted as "interest" as it is not debt money
+					createNewEventDebtMoney(null, EventType.ASSESSMENT_FINAL, 0, dialog.getPrincipal(), dialog.getWeakCards(), dialog.getMediumCards(), dialog.getStrongCards());
 			}
 			else if (ACTION_ADDITIONAL_COMMENTS.equals(pEvent.getActionCommand()))
 				new ChangeDescriptionDialog(HelperUI.this, mGame, mEntityManager).setVisible(true);
@@ -428,6 +537,8 @@ public class HelperUI extends JFrame
 				if (fc.showSaveDialog(HelperUI.this) == JFileChooser.APPROVE_OPTION)
 				{
 					File toExport = fc.getSelectedFile();
+					if (!toExport.getName().endsWith(".xml"))
+						toExport = new File(toExport.getAbsolutePath() + ".xml");
 					try
 					{
 						JAXBContext jc = JAXBContext.newInstance(Game.class);
@@ -456,6 +567,8 @@ public class HelperUI extends JFrame
 					if (importDialog.wasApplied())
 					{
 						mPlayers.addAll(importDialog.getNewPlayers());
+						for (Player newPlayer : importDialog.getNewPlayers())
+							mNonDeadPlayers.add(newPlayer.getId());
 						mEvents.addAll(importDialog.getNewEvents());
 						refreshUI();
 					}
@@ -477,7 +590,7 @@ public class HelperUI extends JFrame
 					final Player player = mPlayers.get(selectedPlayer);
 					if (ACTION_NEW_CREDIT.equals(pEvent.getActionCommand()))
 					{
-						final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Nouveau crédit pour " + player.getName(), 3, false, Fields.PRINCIPAL_ONLY);
+						final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Nouveau crédit pour " + player.getName(), 3, Purpose.NEW_OR_REIMB_CREDIT);
 						dialog.setVisible(true);
 						final int principal = dialog.getPrincipal();
 						if (principal > 0)
@@ -487,7 +600,7 @@ public class HelperUI extends JFrame
 						createNewEventDebtMoney(player, EventType.INTEREST_ONLY, 0, player.getCurInterest(), 0, 0, 0);
 					else if (ACTION_REIMB_CREDIT.equals(pEvent.getActionCommand()))
 					{
-						final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Remboursement de crédit pour " + player.getName(), 3, false, Fields.PRINCIPAL_ONLY);
+						final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, "Remboursement de crédit pour " + player.getName(), 3, Purpose.NEW_OR_REIMB_CREDIT);
 						dialog.setVisible(true);
 						final int principal = dialog.getPrincipal();
 						if (principal > 0)
@@ -513,6 +626,7 @@ public class HelperUI extends JFrame
 										}
 									}
 									mPlayers.remove(player);
+									mNonDeadPlayers.remove(player.getId());
 									mGame.removePlayer(player);
 									mGame.recomputeAll(null);
 									mEntityManager.getTransaction().commit();
@@ -546,7 +660,14 @@ public class HelperUI extends JFrame
 							if ((player.getCurDebt() > 0) && (ACTION_DEATH.equals(pEvent.getActionCommand()) || ACTION_QUIT_PLAYER.equals(pEvent.getActionCommand())))
 								if (JOptionPane.showConfirmDialog(HelperUI.this, "Ce joueur a encore des dettes. Il devrait aller voir la banque avant de mourir. Voulez-vous quand même le faire mourir ?", "Joueur avec dettes", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.NO_OPTION)
 									return;
-							final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, title, 0, cannotPay, mGame.getMoneySystem() == Game.MONEY_DEBT ? Fields.INTEREST_CARDS : Fields.COINS_CARDS);
+							Purpose purpose;
+							if (cannotPay)
+								purpose = Purpose.DEFAULT;
+							else if (mGame.getMoneySystem() == Game.MONEY_DEBT)
+								purpose = Purpose.PLAYER_ASSESSMENT_DEBT_MONEY;
+							else
+								purpose = Purpose.PLAYER_ASSESSMENT_LIBRE_MONEY;
+							final CreditActionDialog dialog = new CreditActionDialog(HelperUI.this, title, 0, purpose);
 							dialog.setVisible(true);
 							if (dialog.wasApplied())
 							{
@@ -557,6 +678,11 @@ public class HelperUI extends JFrame
 								{
 									eventType = EventType.DEATH;
 									mNonDeadPlayers.remove(player.getId());
+									// Remove the player from suggested deaths
+									if (mSuggestedDeathsLabel.getText().contains(player.getName() + ", "))
+										mSuggestedDeathsLabel.setText(mSuggestedDeathsLabel.getText().replaceAll(player.getName() + ", ", ""));
+									else if (mSuggestedDeathsLabel.getText().contains(player.getName()))
+										mSuggestedDeathsLabel.setText(mSuggestedDeathsLabel.getText().replaceAll(player.getName(), ""));
 								}
 								else// if (ACTION_QUIT_PLAYER.equals(pEvent.getActionCommand()))
 									eventType = EventType.QUIT;
@@ -581,7 +707,7 @@ public class HelperUI extends JFrame
 		{
 			mEntityManager.getTransaction().begin();
 			Event event = new Event(mGame, pEventType, pPlayer);
-			if (principal > 0) event.setPrincipal(principal);
+			if (principal != 0) event.setPrincipal(principal);
 			if (interest > 0) event.setInterest(interest);
 			if (weakCards > 0) event.setWeakCards(weakCards);
 			if (mediumCards > 0) event.setMediumCards(mediumCards);
@@ -797,7 +923,7 @@ public class HelperUI extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent pEvent)
 			{
-				JOptionPane.showMessageDialog(HelperUI.this, "Programme d'aide à l'animateur et banquier de Ğeconomicus.\n\nVersion 0.9. 2018/04/12", "À propos", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(HelperUI.this, "Programme d'aide à l'animateur et banquier de Ğeconomicus.\n\nVersion " + VERSION_NUMBER + ". " + RELEASE_DATE + ".", "À propos", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		menuHelp.add(menuItemAbout);
@@ -1009,8 +1135,8 @@ public class HelperUI extends JFrame
 			// Fill the entries until the current turn
 			while (mDeathSchedule.size() < i)
 				mDeathSchedule.add(0);
-			int target = (int)Math.round(rebornFunction(nbPlayers, mGame.getNbTurnsPlanned(), t0, p0, i + 1));
-			int diff = target - curRenewed;
+			final int target = (int)Math.round(rebornFunction(nbPlayers, mGame.getNbTurnsPlanned(), t0, p0, i + 1));
+			final int diff = target - curRenewed;
 			mDeathSchedule.set(i - 1, diff);
 			curRenewed += diff;
 		}
@@ -1039,6 +1165,7 @@ public class HelperUI extends JFrame
 			mCreditHistory.clear();
 			mPlayersInPrison.clear();
 			mPlayerAges.clear();
+			mPlayersInWarning.clear();
 			Map<Integer, Integer> currentCredit = new HashMap<>();
 			for (Event event : mEvents)
 			{
@@ -1106,6 +1233,26 @@ public class HelperUI extends JFrame
 						mPlayerAges.put(playerId, mPlayerAges.get(playerId).intValue() + 1);
 				}
 			}
+		}
+		List<Player> byAlpha = new ArrayList<>();
+		byAlpha.addAll(mPlayers);
+		byAlpha.sort(new Comparator<Player>()
+		{
+			@Override
+			public int compare(Player pO1, Player pO2)
+			{
+				return pO1.getName().compareTo(pO2.getName());
+			}
+		});
+		Player previousPlayer = null;
+		for (Player player : byAlpha)
+		{
+			if ((previousPlayer != null) && (player.getName().contains(previousPlayer.getName())))
+			{
+				mPlayersInWarning.put(player.getId(), "Le nom de ce joueur peut être confondu avec le joueur " + previousPlayer.getName());
+				mPlayersInWarning.put(previousPlayer.getId(), "Le nom de ce joueur peut être confondu avec le joueur " + player.getName());
+			}
+			previousPlayer = player;
 		}
 		mPlayerTable.tableChanged(new TableModelEvent(mPlayerTableModel));
 		mPlayerTable.repaint();

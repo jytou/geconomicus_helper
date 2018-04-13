@@ -9,6 +9,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
@@ -35,7 +37,16 @@ public class CreditActionDialog extends JDialog
 		}
 	}
 
-	public enum Fields { PRINCIPAL_ONLY, INTEREST_CARDS, COINS_CARDS};
+	public enum Purpose { MONEY_MASS_CHANGE, BANK_INVESTMENT, NEW_OR_REIMB_CREDIT, DEFAULT, PLAYER_ASSESSMENT_DEBT_MONEY, PLAYER_ASSESSMENT_LIBRE_MONEY };
+	private final static Set<Purpose> SHOW_CARDS_PURPOSE = new HashSet<>();
+	static
+	{
+		SHOW_CARDS_PURPOSE.add(Purpose.BANK_INVESTMENT);
+		SHOW_CARDS_PURPOSE.add(Purpose.DEFAULT);
+		SHOW_CARDS_PURPOSE.add(Purpose.PLAYER_ASSESSMENT_DEBT_MONEY);
+		SHOW_CARDS_PURPOSE.add(Purpose.PLAYER_ASSESSMENT_LIBRE_MONEY);
+	}
+
 	// Text fields
 	private JTextField mPrincipalTF;
 	private JTextField mInterestTF;
@@ -47,6 +58,7 @@ public class CreditActionDialog extends JDialog
 	private JTextField mStrongCardsTF;
 	// Return values
 	private EventType mEventType = null;
+	private String mPrincipalLabel;
 	private int mPrincipal = 0;
 	private int mInterest = 0;
 	private int mWeakCoins = 0;
@@ -155,46 +167,55 @@ public class CreditActionDialog extends JDialog
 		}
 	}
 
-	public CreditActionDialog(final JFrame pParent, final String pTitle, final int pDefaultPrincipal, final boolean pShowDefaultType, final Fields pFields)
+	public CreditActionDialog(final JFrame pParent, final String pTitle, final int pDefaultPrincipal, final Purpose pPurpose)
 	{
 		super(pParent, pTitle);
 		setSize(600, 250);
 		setLocation(200, 200);
 		setModal(true);
 		final JPanel mainPanel = new JPanel(new GridBagLayout());
-		switch (pFields)
+		switch (pPurpose)
 		{
-		case PRINCIPAL_ONLY:
-			
+		case NEW_OR_REIMB_CREDIT:
+		case DEFAULT:
+			mPrincipalLabel = "Principal";
 			break;
-
+		case MONEY_MASS_CHANGE:
+			mPrincipalLabel = "Delta";
+			break;
+		case BANK_INVESTMENT:
+			mPrincipalLabel = "Monnaie investie";
+			break;
+		case PLAYER_ASSESSMENT_DEBT_MONEY:
+			mPrincipalLabel = "Monnaie restante";
+			break;
 		default:
 			break;
 		}
 		int y = 0;
-		if (Fields.PRINCIPAL_ONLY.equals(pFields) || Fields.INTEREST_CARDS.equals(pFields))
+		if (!Purpose.PLAYER_ASSESSMENT_LIBRE_MONEY.equals(pPurpose))
 		{
-			mPrincipalTF = createField(mainPanel, y++, "Principal");
+			mPrincipalTF = createField(mainPanel, y++, mPrincipalLabel);
 			mPrincipalTF.setText(String.valueOf(pDefaultPrincipal));
 		}
-		if (Fields.INTEREST_CARDS.equals(pFields))
+		if (Purpose.DEFAULT.equals(pPurpose))
 		{
 			mInterestTF = createField(mainPanel, y++, "Intérêts");
 			mInterestTF.setText(String.valueOf(pDefaultPrincipal / 3));
 		}
-		if (Fields.COINS_CARDS.equals(pFields))
+		if (Purpose.PLAYER_ASSESSMENT_LIBRE_MONEY.equals(pPurpose))
 		{
 			mWeakCoinsTF = createField(mainPanel, y++, "Monnaie faible");
 			mMediumCoinsTF = createField(mainPanel, y++, "Monnaie moyenne");
 			mStrongCoinsTF = createField(mainPanel, y++, "Monnaie forte");
 		}
-		if (Fields.INTEREST_CARDS.equals(pFields) || Fields.COINS_CARDS.equals(pFields))
+		if (SHOW_CARDS_PURPOSE.contains(pPurpose))
 		{
 			mWeakCardsTF = createField(mainPanel, y++, "Cartes faibles");
 			mMediumCardsTF = createField(mainPanel, y++, "Cartes moyennes");
 			mStrongCardsTF = createField(mainPanel, y++, "Cartes fortes");
 		}
-		if (pShowDefaultType)
+		if (Purpose.DEFAULT.equals(pPurpose))
 		{
 			final ActionListener rbActionListener = new ActionListener()
 			{
@@ -253,7 +274,7 @@ public class CreditActionDialog extends JDialog
 		return radioButton;
 	}
 
-	public JTextField createField(final JPanel pMainPanel, final int pGridy, final String pLabel)
+	public JTextField createField(final JPanel pMainPanel, final int pGridy, String pLabel)
 	{
 		pMainPanel.add(new JLabel(pLabel), new GridBagConstraints(0, pGridy, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		final JTextField jTextField = new JTextField(50);
