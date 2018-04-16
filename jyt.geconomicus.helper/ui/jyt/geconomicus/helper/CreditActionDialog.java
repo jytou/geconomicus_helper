@@ -284,6 +284,20 @@ public class CreditActionDialog extends JDialog
 		jTextField.getActionMap().put("enter", new ApplyAction());
 		jTextField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
 		jTextField.getActionMap().put("escape", new CancelAction());
+		jTextField.addFocusListener(new FocusListener()
+		{
+			@Override
+			public void focusLost(FocusEvent pEvent)
+			{
+			}
+			
+			@Override
+			public void focusGained(FocusEvent pEvent)
+			{
+				jTextField.setSelectionStart(0);
+				jTextField.setSelectionEnd(jTextField.getText().length());
+			}
+		});
 		return jTextField;
 	}
 

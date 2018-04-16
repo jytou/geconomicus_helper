@@ -6,12 +6,11 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,7 +22,6 @@ import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
@@ -31,155 +29,13 @@ import jyt.geconomicus.helper.Event.EventType;
 
 public class StatsFrame extends JFrame
 {
-	private static final int GAME_POS_DEBT_MONEY = 0;
-	private static final int GAME_POS_LIBRE_MONEY = 1;
-
 	private static final String SORTER_FOR_BANK = "zzz";
 	private static final String BANK_NAME = "banque";
 	private static final String BANK_KEY = SORTER_FOR_BANK + BANK_NAME;
 
-	private static final Color STANDARD_DEV_COLOR = new Color(0, 100, 0);
-	public static final Color HISTOGRAM_COLOR = new Color(0, 150, 0);
-
 	private List<String> mMoneyTypes = new ArrayList<>();
-	private Color[] mAchievementColors = new Color[] {new Color(200, 120, 60), new Color(0, 150, 0)};
-
-	interface IStatsPanel
-	{
-		void setMaxValue(int pMaxValue);
-	}
-	private List<IStatsPanel> mStatsPanels = new ArrayList<>();
-
-	class ValuesStats extends JPanel implements IStatsPanel
-	{
-		private SortedMap<String, Integer> mPlayerAchievements = new TreeMap<>();
-		private int mMaxValue;
-		private double mAverage;
-		private double mStandardDeviation;
-
-		// Percentages
-		private final static int BAR_WIDTH = 80;
-		private final static int FRAME_SPACE_HORIZ = 5;
-		private final static int FRAME_SPACE_VERT = 10;
-
-		public void setPlayerAchievements(SortedMap<String, Integer> pPlayerAchievements)
-		{
-			if (pPlayerAchievements.size() <= 1)
-				return;
-
-			mMaxValue = 0;
-			double total = 0;
-			for (int value : pPlayerAchievements.values())
-			{
-				if (value > mMaxValue)
-					mMaxValue = value;
-				total += value;
-			}
-			mAverage = total / pPlayerAchievements.size();
-			double diffSquare = 0;
-			for (int value : pPlayerAchievements.values())
-				diffSquare += sqr(mAverage - value);
-			// We want the standard deviation relative to the average
-			mStandardDeviation = Math.sqrt(diffSquare / (pPlayerAchievements.size() - 1)) / mAverage;
-			mPlayerAchievements = pPlayerAchievements;
-			repaint();
-		}
-
-		public double getAverage()
-		{
-			return mAverage;
-		}
-
-		public double getStandardDeviation()
-		{
-			return mStandardDeviation;
-		}
-
-		@Override
-		protected void paintComponent(Graphics g)
-		{
-			super.paintComponent(g);
-			final Graphics2D g2 = (Graphics2D)g;
-			final Stroke originalStroke = g2.getStroke();
-			if (mPlayerAchievements.isEmpty())
-				return;
-			// Some initialization
-			final int w = getWidth();
-			final int h = getHeight();
-			final int frameWidth = (int)(1.0 * FRAME_SPACE_HORIZ * w / 100);
-			final int frameHeight = (int)(1.0 * FRAME_SPACE_VERT * h / 100);
-			final int usableWidth = w - 2 * frameWidth;
-			final int usableHeight = h - 2 * frameHeight;
-			int x = 0;
-			final int nbPlayers = mPlayerAchievements.size();
-			final int barWidth = (int)Math.round(1.0 * usableWidth / nbPlayers * BAR_WIDTH / 100);
-			final int barPos = usableWidth / nbPlayers - barWidth;
-			final double fontSize = 0.4 * frameWidth;
-			g.setFont(getFont().deriveFont((float)fontSize));
-			g.setColor(Color.white);
-			g.fillRect(0, 0, w, h);
-			// Show histograms for every player
-			for (String playerName : mPlayerAchievements.keySet())
-			{
-				g.setColor(HISTOGRAM_COLOR);
-				final int pos = (int)((1.0 * usableWidth * x) / nbPlayers);
-				final int value = usableHeight * mPlayerAchievements.get(playerName).intValue() / mMaxValue;
-				g.fillRect(frameWidth + pos + barPos, h - frameHeight - value, barWidth, value);
-				g.setColor(Color.black);
-				String name = playerName;
-				if (name.startsWith(StatsFrame.SORTER_FOR_BANK))
-					name = name.substring(SORTER_FOR_BANK.length());
-				final int stringWidth = g.getFontMetrics().stringWidth(name);
-				g.drawString(name, (int)(frameWidth + pos + (1.0 * usableWidth / nbPlayers / 2) - stringWidth / 2), (int)(h - frameHeight + (int)fontSize + (x%2 * fontSize)));
-				x++;
-			}
-			g.setColor(Color.black);
-			// Print Y axis labels
-			for (int i = 0; i < mMaxValue + 20; i += 20)
-			{
-				if (i > mMaxValue)
-					i = mMaxValue;
-				final int yPos = frameHeight + usableHeight - i * usableHeight / mMaxValue;
-				g.drawString(String.valueOf(i), (int)(frameWidth - fontSize * 2), yPos);
-				g.drawLine(frameWidth - 5, yPos, frameWidth + 5, yPos);
-			}
-			// y axis
-			g.drawLine(frameWidth, frameHeight, frameWidth, h - frameHeight);
-			// x axis
-			g.drawLine(frameWidth, h - frameHeight, w - frameWidth, h - frameHeight);
-			// standard deviation axis
-			g.drawLine(w - frameWidth, frameHeight, w - frameWidth, h - frameHeight);
-			// standard deviation
-			g.setColor(STANDARD_DEV_COLOR);
-			setDottedLines(g2);
-			int stdY = h - frameHeight - (int)(mStandardDeviation * usableHeight / 1.5);// because we go up to 150% in the graph
-			g.drawLine(frameWidth, stdY, w - frameWidth, stdY);
-			g2.setStroke(originalStroke);
-			g.drawString("Écart-type", frameWidth + 5, stdY - 5);
-			// std dev axis
-			g.drawString("0 %", w - frameWidth + 10, h - frameHeight);
-			g.drawString("50 %", w - frameWidth + 10, h - frameHeight - usableHeight / 3);
-			g.drawString("100 %", w - frameWidth + 10, h - frameHeight - 2 * usableHeight / 3);
-			g.drawString("150 %", w - frameWidth + 10, frameHeight);
-			g.drawLine(w - frameWidth - 5, frameHeight + usableHeight / 3, w - frameWidth + 5, frameHeight + usableHeight / 3);
-			g.drawLine(w - frameWidth - 5, frameHeight + 2 * usableHeight / 3, w - frameWidth + 5, frameHeight + 2 * usableHeight / 3);
-			g.drawLine(w - frameWidth - 5, frameHeight, w - frameWidth + 5, frameHeight);
-			// average
-			g.setColor(Color.red);
-			stdY = h - frameHeight - (int)(mAverage * usableHeight);
-			g.drawLine(frameWidth, stdY, w - frameWidth, stdY);
-			g.setColor(Color.blue);
-			final int avgY = h - frameHeight - (int)(mAverage * usableHeight / mMaxValue);
-			g.drawLine(frameWidth, avgY, w - frameWidth, avgY);
-			g.drawString("Moyenne", frameWidth + 5, avgY - 5);
-		}
-
-		@Override
-		public void setMaxValue(int pMaxValue)
-		{
-			mMaxValue = pMaxValue;
-		}
-	}
+	private static final Color COLOR_DEBT_MONEY = new Color(200, 120, 60);
+	private static final Color COLOR_LIBRE_MONEY = new Color(0, 150, 0);
 
 	private final static Set<EventType> mIncludeEvents = new HashSet<>();
 	static
@@ -300,9 +156,14 @@ public class StatsFrame extends JFrame
 		}
 	}
 
+	public void setDashedLines(Graphics2D g2)
+	{
+		g2.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] {11}, 0));
+	}
+
 	public void setDottedLines(Graphics2D g2)
 	{
-		g2.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] {9}, 0));
+		g2.setStroke (new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1, new float[] {2, 9}, 0));
 	}
 
 	class AggregatedStats extends JPanel
@@ -316,9 +177,20 @@ public class StatsFrame extends JFrame
 		private int mAggregatedMax = 0;
 		private List<Double> mAverages = new ArrayList<>();
 		private List<Double> mStdDevs = new ArrayList<>();
+		private List<Double> mPoors = new ArrayList<>();
+		private List<Color> mColors = new ArrayList<>();
 
-		public synchronized void setAchievements(final SortedMap<String, List<Integer>> pAchievements)
+		public synchronized void setPlayerAchievements(final SortedMap<String, Integer> pAchievements, Color pColor)
 		{
+			final SortedMap<String, List<Integer>> achievements = new TreeMap<>();
+			for (String playerName : pAchievements.keySet())
+				achievements.put(playerName, Arrays.asList(new Integer[] {pAchievements.get(playerName)}));
+			setAchievements(achievements, Arrays.asList(new Color[] {pColor}));
+		}
+
+		public synchronized void setAchievements(final SortedMap<String, List<Integer>> pAchievements, List<Color> pColors)
+		{
+			mColors = pColors;
 			mAchievements.clear();
 			for (String playerName : pAchievements.keySet())
 				mAchievements.put(playerName, new ArrayList<>(pAchievements.get(playerName)));
@@ -334,11 +206,15 @@ public class StatsFrame extends JFrame
 			}
 			mAverages.clear();
 			mStdDevs.clear();
+			mPoors.clear();
+			final List<List<Integer>> allValues = new ArrayList<>();
 			for (int i = 0; i < nbGames; i++)
 			{
 				mAverages.add((double)0);
 				mStdDevs.add((double)0);
+				mPoors.add((double)0);
 				nbPlayersForGame.add(0);
+				allValues.add(new ArrayList<>());
 			}
 			for (String playerName : pAchievements.keySet())
 			{
@@ -349,6 +225,7 @@ public class StatsFrame extends JFrame
 					if (valueInteger != null)
 					// A null value indicated that the player has not participated in the game so it shouldn't be counted
 					{
+						allValues.get(i).add(valueInteger);
 						final int value = valueInteger.intValue();
 						if (value > mAggregatedMax)
 							mAggregatedMax = value;
@@ -367,6 +244,8 @@ public class StatsFrame extends JFrame
 				{
 					mAverages.remove(i);
 					mStdDevs.remove(i);
+					mPoors.remove(i);
+					allValues.remove(i);
 					for (String playerName : pAchievements.keySet())
 						pAchievements.get(playerName).remove(i);
 				}
@@ -383,6 +262,18 @@ public class StatsFrame extends JFrame
 					// We want the standard deviation relative to the average
 					mStdDevs.set(i, Math.sqrt(mStdDevs.get(i) / nbPlayers) / average);
 
+					// Now compute the median
+					final List<Integer> gameValues = allValues.get(i);
+					gameValues.sort(new Comparator<Integer>()
+					{
+						@Override
+						public int compare(Integer i1, Integer i2)
+						{
+							return i1.compareTo(i2);
+						}
+					});
+					double median = gameValues.size() % 2 == 0 ? (gameValues.get(gameValues.size() / 2) + gameValues.get(gameValues.size() / 2 + 1)) / 2 : gameValues.get(gameValues.size() / 2);
+					mPoors.set(i, median * 0.6);
 				}
 			}
 		}
@@ -402,17 +293,24 @@ public class StatsFrame extends JFrame
 			final int usableWidth = w - 2 * frameWidth;
 			final int usableHeight = h - 2 * frameHeight;
 			final int nbPlayers = mAchievements.size();
-			final int barWidth = (int)Math.round(1.0 * usableWidth / nbPlayers / mAchievementColors.length * BAR_WIDTH / 100);
+			final int barWidth = (int)Math.round(1.0 * usableWidth / nbPlayers / mAverages.size() * BAR_WIDTH / 100);
 			final int barPos = 3;
 			final double fontSize = 0.02 * w;
 			g.setFont(getFont().deriveFont((float)fontSize));
 			g.setColor(Color.white);
 			g.fillRect(0, 0, w, h);
 
+			int labelsYpos = frameHeight;
+
 			for (int i = 0; i < mAverages.size(); i++)
 			{
-				g.setColor(mAchievementColors[i]);
-				g.drawString(mMoneyTypes.get(i), frameWidth + 10, (int)(frameHeight + i * fontSize));
+				g.setColor(mColors.get(i));
+				if (mAverages.size() > 1)
+				// Print the type of money only on the aggregated graphs - eg if there are more than one game
+				{
+					g.drawString(mMoneyTypes.get(i), frameWidth + 10, labelsYpos);
+					labelsYpos += fontSize;
+				}
 				// player histograms
 				int x = 0;
 				for (String playerName : mAchievements.keySet())
@@ -427,16 +325,34 @@ public class StatsFrame extends JFrame
 					x++;
 				}
 				// standard deviation
-				setDottedLines(g2);
+				setDashedLines(g2);
 				final int stdY = h - frameHeight - (int)(mStdDevs.get(i) * usableHeight / 1.5);// because we go up to 150% in the graph
 				g.drawLine(frameWidth, stdY, w - frameWidth, stdY);
+				// poors
+				setDottedLines(g2);
+				final int poorY = h - frameHeight - (int)(mPoors.get(i) * usableHeight / mAggregatedMax);
+				g.drawLine(frameWidth, poorY, w - frameWidth, poorY);
 				// average
 				g2.setStroke(originalStroke);
 				final int avgY = h - frameHeight - (int)(mAverages.get(i) * usableHeight / mAggregatedMax);
 				g.drawLine(frameWidth, avgY, w - frameWidth, avgY);
 			}
-			int x = 0;
 			g.setColor(Color.black);
+			// Print the different types of lines: average, std dev and poor
+			g.drawLine(frameWidth + 10, (int)(labelsYpos - fontSize / 3), frameWidth + 40, (int)(labelsYpos - fontSize / 3));
+			g.drawString("Moyenne", frameWidth + 45, labelsYpos);
+			labelsYpos += fontSize;
+			setDashedLines(g2);
+			g.drawLine(frameWidth + 10, (int)(labelsYpos - fontSize / 3), frameWidth + 40, (int)(labelsYpos - fontSize / 3));
+			g2.setStroke(originalStroke);
+			g.drawString("Écart-type", frameWidth + 45, labelsYpos);
+			labelsYpos += fontSize;
+			setDottedLines(g2);
+			g.drawLine(frameWidth + 10, (int)(labelsYpos - fontSize / 3), frameWidth + 40, (int)(labelsYpos - fontSize / 3));
+			g2.setStroke(originalStroke);
+			g.drawString("Seuil de pauvreté", frameWidth + 45, labelsYpos);
+
+			int x = 0;
 			for (String playerName : mAchievements.keySet())
 			{
 				final int pos = (int)((1.0 * usableWidth * x) / nbPlayers);
@@ -495,7 +411,7 @@ public class StatsFrame extends JFrame
 		List<Integer> list = new ArrayList<>();
 		final SortedMap<String, List<Integer>> aggregatedAchievements = new TreeMap<>();
 		aggregatedAchievements.put(bankName, list);
-		for (int i = 0; i < mAchievementColors.length; i++)
+		for (int i = 0; i < pGames.size(); i++)
 			list.add(null);
 		pGames.sort(new Comparator<Game>()
 		{
@@ -505,8 +421,11 @@ public class StatsFrame extends JFrame
 				return g1.getMoneySystem() < g2.getMoneySystem() ? 1 : -1;
 			}
 		});
+		int pos = 0;
+		final List<Color> aggregatedColors = new ArrayList<>();
 		for (Game game : pGames)
 		{
+			aggregatedColors.add(game.getMoneySystem() == Game.MONEY_DEBT ? COLOR_DEBT_MONEY : COLOR_LIBRE_MONEY);
 			mMoneyTypes.add(game.getMoneySystem() == Game.MONEY_DEBT ? "Monnaie-Dette" : "Monnaie Libre");
 			for (Player player : game.getPlayers())
 			{
@@ -514,91 +433,60 @@ public class StatsFrame extends JFrame
 				{
 					list = new ArrayList<>();
 					aggregatedAchievements.put(player.getName(), list);
-					for (int i = 0; i < mAchievementColors.length; i++)
+					for (int i = 0; i < pGames.size(); i++)
 						list.add(null);
 				}
 			}
-			final ValuesStats panelWOBank = new ValuesStats();
-			computeValues(game, panelWOBank, false, aggregatedAchievements, game.getMoneySystem() == Game.MONEY_DEBT ? -1 : StatsFrame.GAME_POS_LIBRE_MONEY);
+			final AggregatedStats panelWOBank = new AggregatedStats();
+			computeValues(game, panelWOBank, false, aggregatedAchievements, game.getMoneySystem() == Game.MONEY_DEBT ? -1 : pos++, game.getMoneySystem() == Game.MONEY_DEBT ? COLOR_DEBT_MONEY : COLOR_LIBRE_MONEY);
 			tabbedPane.add(game.getMoneySystem() == Game.MONEY_DEBT ? "Monnaie-Dette sans banque" : "Monnaie Libre", panelWOBank);
 			if (game.getMoneySystem() == Game.MONEY_DEBT)
 			{
-				final ValuesStats panelWithBank = new ValuesStats();
-				computeValues(game, panelWithBank, true, aggregatedAchievements, StatsFrame.GAME_POS_DEBT_MONEY);
+				final AggregatedStats panelWithBank = new AggregatedStats();
+				computeValues(game, panelWithBank, true, aggregatedAchievements, pos++, COLOR_DEBT_MONEY);
 				tabbedPane.add("Avec la banque", panelWithBank);
-				final HistoryStats historyStats = new HistoryStats(game);
-				tabbedPane.add("Historique masse monétaire", historyStats);
 			}
+			final HistoryStats historyStats = new HistoryStats(game);
+			tabbedPane.add("Historique masse monétaire", historyStats);
 		}
 		final AggregatedStats aggrStatsStd = new AggregatedStats();
-		aggrStatsStd.setAchievements(aggregatedAchievements);
+		aggrStatsStd.setAchievements(aggregatedAchievements, aggregatedColors);
 		tabbedPane.addTab("Aggrégés standards", aggrStatsStd);
 
-		final SortedMap<String, List<Integer>> aggregatedAchievementsFixed = new TreeMap<>(aggregatedAchievements);
-		for (String playerName : aggregatedAchievementsFixed.keySet())
+		final SortedMap<String, List<Integer>> aggregatedAchievementsFixed = new TreeMap<>();
+		for (String playerName : aggregatedAchievements.keySet())
 		{
+			List<Integer> achievements = new ArrayList<>();
+			achievements.addAll(aggregatedAchievements.get(playerName));
 			if (!BANK_KEY.equals(playerName))
 			// the bank doesn't need any fixing
-			{
-				List<Integer> achievements = aggregatedAchievementsFixed.get(playerName);
 				for (int i = 0; i < achievements.size(); i++)
 				{
 					final Integer achievement = achievements.get(i);
 					if (achievement != null)
 					{
 						// For all games, take away the 8 cards that the player got in his hands for free
-						achievements.set(i, achievement.intValue() - 8);
-						if (i == GAME_POS_LIBRE_MONEY)
+						int adjustment = 8;
+						if (pGames.get(i).getMoneySystem() == Game.MONEY_LIBRE)
 						// Fix the Libre Money part
 						// Take away the 7 coins on average that a player gets for each turn - once before his rebirth, once at the end of the game = 14
 						// But we counted only 1/3 of the value so that's -2x2=4
-							achievements.set(i, achievement.intValue() - 4);
+							adjustment += 4 * pGames.get(i).getMoneyCardsFactor();
+						achievements.set(i, achievement.intValue() - adjustment);
 					}
 				}
-			}
+			aggregatedAchievementsFixed.put(playerName, achievements);
 		}
 		// TODO ideally, we should also adjust in debt money
 		// every time we do an assessment on a player, we should take away the equivalent of the average money mass per player at the current turn
 		// iterate on the events, for each turn save the current money mass before taking the players into account, then do the assessment for every player
 		final AggregatedStats aggrStatsFixed = new AggregatedStats();
-		aggrStatsFixed.setAchievements(aggregatedAchievementsFixed);
+		aggrStatsFixed.setAchievements(aggregatedAchievementsFixed, aggregatedColors);
 		tabbedPane.addTab("Aggrégés corrigés", aggrStatsFixed);
-
-		tabbedPane.addKeyListener(new KeyListener()
-		{
-			@Override
-			public void keyTyped(KeyEvent pEvent)
-			{
-				if (pEvent.getKeyChar() == 'm')
-				{
-					final String value = JOptionPane.showInputDialog(StatsFrame.this, "Renseigner la valeur maxi", "Valeur max", JOptionPane.QUESTION_MESSAGE);
-					try
-					{
-						int intVal = Integer.valueOf(value);
-						mStatsPanels.get(tabbedPane.getSelectedIndex()).setMaxValue(intVal);
-						repaint();
-					}
-					catch (NumberFormatException e)
-					{
-						JOptionPane.showMessageDialog(StatsFrame.this, "Valeur saisie non correcte", "Erreur", JOptionPane.ERROR_MESSAGE);
-					}
-				}
-			}
-			
-			@Override
-			public void keyReleased(KeyEvent pE)
-			{
-			}
-			
-			@Override
-			public void keyPressed(KeyEvent pE)
-			{
-			}
-		});
 		getContentPane().add(tabbedPane);
 	}
 
-	private void computeValues(Game pGame, ValuesStats pValuesPanel, boolean pAddBank, SortedMap<String, List<Integer>> pAggregatedAchievements, int pAggregateIndex)
+	private void computeValues(final Game pGame, final AggregatedStats pValuesPanel, final boolean pAddBank, SortedMap<String, List<Integer>> pAggregatedAchievements, final int pAggregateIndex, final Color pColor)
 	{
 		final String bankName = StatsFrame.BANK_KEY;
 		final List<Event> events = new ArrayList<>();
@@ -673,7 +561,7 @@ public class StatsFrame extends JFrame
 				break;
 			}
 		}
-		pValuesPanel.setPlayerAchievements(playerAchievements);
+		pValuesPanel.setPlayerAchievements(playerAchievements, pColor);
 		if (pAggregateIndex != -1)
 			for (String playerName : playerAchievements.keySet())
 				pAggregatedAchievements.get(playerName).set(pAggregateIndex, playerAchievements.get(playerName));
@@ -692,7 +580,7 @@ public class StatsFrame extends JFrame
 			gained += pEvent.getPrincipal() + pEvent.getInterest();
 		else
 			gained += (pEvent.getWeakCoins() + 2 * pEvent.getMediumCoins() + 4 * pEvent.getStrongCoins()) / 3;
-		gained += (pEvent.getWeakCards() + 2 * pEvent.getMediumCards() + 4 * pEvent.getStrongCards()) * pCurrentFactor;
+		gained += (pEvent.getWeakCards() + 2 * pEvent.getMediumCards() + 4 * pEvent.getStrongCards()) * pCurrentFactor * pGame.getMoneyCardsFactor();
 		if ((pOwedByPlayer != null) && (EventType.CANNOT_PAY.equals(pEvent.getEvt()) || EventType.BANKRUPT.equals(pEvent.getEvt()) || EventType.PRISON.equals(pEvent.getEvt())))
 		{
 			// The bank seized some values, but it should really destroy the principal (if possible)

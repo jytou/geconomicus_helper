@@ -14,7 +14,7 @@ public class CreateGameTestCase extends TestCase
 		EntityManagerFactory factory = Persistence.createEntityManagerFactory("geco");
 		EntityManager em = factory.createEntityManager();
 		em.getTransaction().begin();
-		Game game = new Game(Game.MONEY_DEBT, 10, "toto", "toto@titi.com", "", "today", "Here");
+		Game game = new Game(Game.MONEY_DEBT, 10, "toto", "toto@titi.com", "", "today", "Here", 1);
 		Player player1 = new Player(game, "Player1");
 		Player player2 = new Player(game, "Player2");
 		Event event1 = new Event(game, EventType.JOIN, player1);

@@ -14,7 +14,7 @@ L'utilisation est simple :
 - un autre programme se charge d'afficher des statistiques en comparant potentiellement plusieurs parties (idéalement avec les mêmes joueurs dans différentes monnaies).
 
 L'accent est mis sur la rapidité d'utilisation avec des boutons accessibles (les actions sont également accessibles via des menus) et surtout des raccourcis clavier permettant d'effectuer les actions rapidement (un simple remboursement d'intérêts se fait en une touche, un nouveau crédit par défaut en 2 touches).
-Le tout est sauvegardé en temps réel dans une base de données locale en cas de crash et est exportable en XML (il serait aussi facile d'exporter du CSV pour les inconditionnels d'imports dans des tableurs).
+Le tout est sauvegardé en temps réel dans une base de données locale en cas de crash et est exportable en XML (il serait aussi facile d'exporter du CSV pour les inconditionnels d'imports dans des tableurs). Il est donc possible de quitter le programme sans crainte en cours de partie, tout est sauvegardé en temps réel sur votre disque dur !
 
 # Lancement du programme
 
@@ -183,7 +183,7 @@ Il vous suffit ensuite de suivre l'usage affiché par cette commande pour l'util
 
 # Note pour les programmeurs
 
-Ce programme est écrit en java et swing de bout en bout, pas vraiment de patterns/frameworks vu sa simplicité, j'ai fait au plus simple et au plus vite. Les seules librairies utilisées sont :
+Ce programme est écrit en Java et Swing de bout en bout, pas vraiment de patterns/frameworks vu sa simplicité, j'ai fait au plus simple et au plus vite. Les seules librairies utilisées sont :
 
 - h2 pour la persistance (ce qui pourrait aisément être changé),
 - eclipselink pour la persistance en base,
@@ -205,7 +205,7 @@ La couche métier est séparée (elle est utilisée par le programme principal, 
 
 N'hésitez pas à faire des *issues*.
 
-# Nouvelle version
+# Nouvelle version 0.9.1
 
 Comme je n'ai pas le temps de mettre à jour ce fichier ce soir, voici quelques améliorations dans la version d'aujourd'hui :
 
@@ -219,3 +219,25 @@ Comme je n'ai pas le temps de mettre à jour ce fichier ce soir, voici quelques 
 - il est possible de saisir une valeur négative lors de la mise à jour de la masse monétaire suite à un événement imprévu,
 - l'affichage de l'écart-type dans les stats va maintenant jusqu'à 150%, j'espère que ça sera suffisant,
 - un nouveau graphique avec la version « corrigée » (-8 cartes pour les joueurs et -7 en monnaie libre).
+
+# Nouvelle version 1.0.0
+
+Suite au jeu à Saint-Clair du Rhône le 14/04/2018, quelques améliorations :
+
+- la boîte de dialogue de choix de partie a été retouchée pour être un peu plus ergonomique,
+- ajout d'un champ pour définir la relation entre la valeur de la monnaie et celle les cartes. En d'autres termes, si une carte vaut 1 ou 2 unités monétaires en monnaie-dette (en monnaie libre c'est 3 ou 6),
+- le changement de nom des joueurs ne se fait plus dans le tableau car cela posait de nombreux problèmes, c'est maintenant accessible par un menu ou la touche F2,
+- les statistiques finales sont directement accessibles soit par un menu dans l'application principale, soit par un bouton dans la boîte de dialogue de choix de partie,
+- correction d'un bug qui faisait que les statistiques standards n'étaient pas affichées lorsqu'on sélectionnait uniquement une partie en monnaie libre,
+- correction du bug lorsqu'on voulait annuler un changement de couleurs de billet dans la fenêtre de rotation des billets en monnaie libre,
+- les champs sont sélectionnés dans la saisie de valeurs lorsqu'ils ont le focus pour qu'on saisisse la valeur en supprimant le 0 d'origine (laisser un 0 dans le champ était plutôt agaçant),
+- l'affichage corrigé ne prenait pas en compte l'ajustement des cartes pour la monnaie libre,
+- l'affichage du nombre de tours commence maintenant à 0, et indique donc le nombre de tours « passés », du coup l'indication du nombre de tours prévus est le nombre de tours exact (alors qu'il fallait ajouter 1 précédemment),
+- un nouveau graphique de masse monétaire en monnaie libre a été ajouté, il est presque tout plat et n'apporte aucune information supplémentaire, mais permet au public de réaliser visuellement la différence entre les variations de masse monétaire en monnaie libre et en monnaie dette,
+- les joueurs non actifs (ont quitté la partie en cours de route) ne sont plus candidats à la mort…
+- les morts suggérés ont une marque visible dans le tableau des joueurs,
+- un indicateur a été ajouté pour montrer la proportion de « pauvres » (60% de la médiane) dans les graphiques de statistiques qui ont été légèrement améliorés,
+- on peut supprimer n'importe quelle série d'événements en appuyant sur « suppr » après avoir sélectionné des lignes dans la table des événements (pour les plus téméraires uniquement !), et changer la date d'un événement (F2).
+
+Cette version est déjà totalement opérationnelle, même si elle mériterait d'être améliorée pour les « non habitués ». N'hésitez pas à faire des issues pour qu'on voie ce qui est le plus urgent dans le futur.
+

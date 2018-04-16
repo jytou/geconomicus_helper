@@ -36,7 +36,7 @@ public class GeconomicusHelper
 			final String curDate = args[1];
 			final String location = args[2];
 			em.getTransaction().begin();
-			final Game game = new Game(Game.MONEY_DEBT, 10, "jytou", "jytou@jytou.geconomicus", "", curDate, location);
+			final Game game = new Game(Game.MONEY_DEBT, 10, "jytou", "jytou@jytou.geconomicus", "", curDate, location, 1);
 			em.persist(game);
 			em.getTransaction().commit();
 			System.out.println("Created new game " + game.toString());

@@ -52,6 +52,7 @@ public class Game implements Serializable
 	private int interestGained;
 	private int cardsInvestBank;
 	private int moneyInvestBank;
+	private Integer moneyCardsFactor;
 	@XmlID
 	private String curdate;
 	private String location;
@@ -72,7 +73,7 @@ public class Game implements Serializable
 		super();
 	}
 
-	public Game(int pMoneySystem, int pNbTurnsPlanned, String pAnimatorPseudo, String pAnimatorEmail, String pDescription, String pCurDate, String pLocation)
+	public Game(int pMoneySystem, int pNbTurnsPlanned, String pAnimatorPseudo, String pAnimatorEmail, String pDescription, String pCurDate, String pLocation, int pMoneyCardsFactor)
 	{
 		super();
 		moneySystem = pMoneySystem;
@@ -82,7 +83,8 @@ public class Game implements Serializable
 		description = pDescription;
 		curdate = pCurDate;
 		location = pLocation;
-		turnNumber = 1;
+		turnNumber = 0;
+		moneyCardsFactor = pMoneyCardsFactor;
 	}
 
 	@XmlTransient
@@ -218,7 +220,7 @@ public class Game implements Serializable
 		interestGained = 0;
 		moneyMass = 0;
 		seizedValues = 0;
-		turnNumber = 1;
+		turnNumber = 0;
 		for (Event event : events)
 		{
 			event.applyEvent();
@@ -257,10 +259,11 @@ public class Game implements Serializable
 		moneyInvestBank = pMoneyInvestBank;
 	}
 
-	public void removeEvent(Event pToUndo)
+	public void removeEvent(Event pToUndo, boolean pRecompute)
 	{
 		events.remove(pToUndo);
-		recomputeAll(null);
+		if (pRecompute)
+			recomputeAll(null);
 	}
 
 	public void investMoney(int pPrincipal)
@@ -274,6 +277,13 @@ public class Game implements Serializable
 	{
 		cardsInvestBank += pTotal;
 		seizedValues -= pTotal;
+	}
+
+	public int getMoneyCardsFactor()
+	{
+		if (moneyCardsFactor == null)
+			moneyCardsFactor = 1;// default
+		return moneyCardsFactor;
 	}
 
 	// These are only for JAXB
@@ -318,5 +328,9 @@ public class Game implements Serializable
 	public void removePlayer(Player pPlayer)
 	{
 		players.remove(pPlayer);
+	}
+	public void setMoneyCardsFactor(int pMoneyCardsFactor)
+	{
+		moneyCardsFactor = pMoneyCardsFactor;
 	}
 }

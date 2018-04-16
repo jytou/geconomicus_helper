@@ -9,6 +9,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.persistence.EntityManager;
 import javax.swing.AbstractAction;
@@ -16,11 +19,12 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
-public class AddPlayerDialog extends JDialog
+public class ChangeEventDateDialog extends JDialog
 {
 	private class CancelAction extends AbstractAction implements ActionListener
 	{
@@ -33,64 +37,57 @@ public class AddPlayerDialog extends JDialog
 
 	private class AddAction extends AbstractAction implements ActionListener
 	{
-		private final JTextField mNameTF;
+		private final JTextField mDateTF;
 
-		private AddAction(JTextField pNameTF)
+		private AddAction(JTextField pDateTF)
 		{
-			mNameTF = pNameTF;
+			mDateTF = pDateTF;
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent pEvent)
 		{
+			Date date;
+			try
+			{
+				date = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(mDateTF.getText());
+			}
+			catch (ParseException e)
+			{
+				JOptionPane.showMessageDialog(ChangeEventDateDialog.this, "La date doit être au format 2018/04/15 22:30:27", "Date incorrecte", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
 			mEntityManager.getTransaction().begin();
-			if (mPlayer == null)
-				mPlayer = new Player(mGame, mNameTF.getText());
-			else
-				mPlayer.setName(mNameTF.getText());
+			mEvent.setTstamp(date);
 			mEntityManager.getTransaction().commit();
 			setVisible(false);
 		}
 	}
 
 	private EntityManager mEntityManager;
-	private Game mGame;
-	private Player mPlayer = null;
+	private Event mEvent;
 
-	public AddPlayerDialog(final JFrame pParent, final Game pGame, final EntityManager pEntityManager, Player pExistingPlayer)
+	public ChangeEventDateDialog(final JFrame pParent, final EntityManager pEntityManager, final Event pEvent)
 	{
-		super(pParent, "Renommer un joueur");
-		mPlayer = pExistingPlayer;
-		initWindow(pGame, pEntityManager);
-	}
-
-	public AddPlayerDialog(final JFrame pParent, final Game pGame, final EntityManager pEntityManager)
-	{
-		super(pParent, "Ajouter un joueur");
-		initWindow(pGame, pEntityManager);
-	}
-
-	public void initWindow(final Game pGame, final EntityManager pEntityManager)
-	{
-		mGame = pGame;
+		super(pParent, "Changer la date d'un événement");
+		mEvent = pEvent;
 		mEntityManager = pEntityManager;
 		setSize(500, 300);
 		setLocation(200, 200);
 		setModal(true);
 		final JPanel mainPanel = new JPanel(new GridBagLayout());
-		mainPanel.add(new JLabel("Nom"), new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-		final JTextField nameTF = new JTextField(50);
-		if (mPlayer != null)
-			nameTF.setText(mPlayer.getName());
-		mainPanel.add(nameTF, new GridBagConstraints(1, 0, 1, 1, 1, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		nameTF.getInputMap().put(KeyStroke.getKeyStroke((char)10), "enter");
-		nameTF.getActionMap().put("enter", new AddAction(nameTF));
-		nameTF.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
-		nameTF.getActionMap().put("escape", new CancelAction());
+		mainPanel.add(new JLabel("Date"), new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		final JTextField dateTF = new JTextField(50);
+		dateTF.setText(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(mEvent.getTstamp()));
+		mainPanel.add(dateTF, new GridBagConstraints(1, 0, 1, 1, 1, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+		dateTF.getInputMap().put(KeyStroke.getKeyStroke((char)10), "enter");
+		dateTF.getActionMap().put("enter", new AddAction(dateTF));
+		dateTF.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
+		dateTF.getActionMap().put("escape", new CancelAction());
 		final JPanel buttonsPanel = new JPanel(new FlowLayout());
-		final JButton addButton = new JButton(mPlayer != null ? "Renommer" : "Ajouter");
-		buttonsPanel.add(addButton);
-		addButton.addActionListener(new AddAction(nameTF));
+		final JButton applyButton = new JButton("Changer la date !");
+		buttonsPanel.add(applyButton);
+		applyButton.addActionListener(new AddAction(dateTF));
 		final JButton cancelButton = new JButton("Annuler");
 		buttonsPanel.add(cancelButton);
 		cancelButton.addActionListener(new CancelAction());
@@ -106,13 +103,8 @@ public class AddPlayerDialog extends JDialog
 			@Override
 			public void focusGained(FocusEvent pE)
 			{
-				nameTF.requestFocus();
+				dateTF.requestFocus();
 			}
 		});
-	}
-
-	public Player getNewPlayer()
-	{
-		return mPlayer;
 	}
 }

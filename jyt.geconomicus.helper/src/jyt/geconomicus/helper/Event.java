@@ -197,7 +197,7 @@ public class Event implements Serializable
 			// and then it's just like quitting
 		case QUIT:
 		case DEATH:
-			game.changeMoneyMass(-interest-principal);
+			game.changeMoneyMass(-interest-principal-(weakCoins + 2 * mediumCoins + 4 * strongCoins) * game.getMoneyCardsFactor());
 			if (EventType.REIMB_CREDIT.equals(evt))
 			{
 				player.setCurDebt(player.getCurDebt() - principal);
@@ -210,6 +210,9 @@ public class Event implements Serializable
 				player.setCurInterest(0);
 			}
 			player.setVisitedBank(true);
+			if ((game.getMoneySystem() == Game.MONEY_LIBRE) && EventType.DEATH.equals(evt))
+			// adjust money mass
+				game.changeMoneyMass(8 * game.getMoneyCardsFactor());
 			break;
 		case INTEREST_ONLY:
 			game.gainInterest(interest);
@@ -227,12 +230,26 @@ public class Event implements Serializable
 			break;
 		case JOIN:
 			player.setActive(true);
+			if (game.getMoneySystem() == Game.MONEY_LIBRE)
+			// Add player's DU to money mass
+				game.changeMoneyMass(7 * game.getMoneyCardsFactor());
 			break;
 		case TURN:
 			for (Player player : game.getPlayers())
 				if (player.getCurDebt() > 0)
 					player.setVisitedBank(false);
 			game.incTurnNumber();
+			if (game.getMoneySystem() == Game.MONEY_LIBRE)
+			// the money mass is going towards the average
+			{
+				int nbPlayers = 0;
+				for (Player player : game.getPlayers())
+					if (player.isActive())
+						nbPlayers++;
+				final int target = 7 * game.getMoneyCardsFactor() * nbPlayers;
+				final int currentMM = game.getMoneyMass();
+				game.changeMoneyMass((target - currentMM) / 2);
+			}
 			break;
 		case END:
 		case XTECHNOLOGICAL_BREAKTHROUGH:

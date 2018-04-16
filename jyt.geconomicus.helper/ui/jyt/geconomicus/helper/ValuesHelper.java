@@ -102,19 +102,19 @@ public class ValuesHelper extends JFrame
 					{
 						if ((cx >= spacew) && (cx <= spacew + cardw))
 						{
-							mWeakValueColor = JColorChooser.showDialog(ValuesHelper.this, "Choisir une couleur pour la valeur faible", mWeakValueColor);
+							mWeakValueColor = chooseNewColor("faible", mWeakValueColor);
 							repaint();
 							return;
 						}
 						else if ((cx >= spacew * 2 + cardw) && (cx <= spacew * 2 + cardw * 2))
 						{
-							mMediumValueColor = JColorChooser.showDialog(ValuesHelper.this, "Choisir une couleur pour la valeur moyenne", mMediumValueColor);
+							mMediumValueColor = chooseNewColor("moyenne", mMediumValueColor);
 							repaint();
 							return;
 						}
 						else if ((cx >= spacew * 3 + cardw * 2) && (cx <= spacew * 3 + cardw * 3))
 						{
-							mStrongValueColor = JColorChooser.showDialog(ValuesHelper.this, "Choisir une couleur pour la valeur forte", mStrongValueColor);
+							mStrongValueColor = chooseNewColor("forte", mStrongValueColor);
 							repaint();
 							return;
 						}
@@ -124,12 +124,21 @@ public class ValuesHelper extends JFrame
 					{
 						if ((cx >= spacew * 2 + cardw) && (cx <= spacew * 2 + cardw * 2))
 						{
-							mWaitingColor = JColorChooser.showDialog(ValuesHelper.this, "Choisir une couleur pour la valeur en attente", mWaitingColor);
+							mWaitingColor = chooseNewColor("en attente", mWaitingColor);
 							repaint();
 							return;
 						}
 					}
 					rotateValues();
+				}
+
+				public Color chooseNewColor(final String pValueType, final Color pOriginalColor)
+				{
+					final Color color = JColorChooser.showDialog(ValuesHelper.this, "Choisir une couleur pour la valeur " + pValueType, pOriginalColor);
+					if (color != null)
+						return color;
+					else
+						return pOriginalColor;
 				}
 			});
 		}

@@ -164,7 +164,8 @@ public class ImportDialog extends JDialog
 						catch (Throwable e)
 						{
 							for (Event event : mNewEvents)
-								pCurrentGame.removeEvent(event);
+								pCurrentGame.removeEvent(event, false);
+							pCurrentGame.recomputeAll(null);
 							mNewEvents.clear();;
 							for (Player player : mNewPlayers)
 								pCurrentGame.removePlayer(player);
@@ -187,7 +188,8 @@ public class ImportDialog extends JDialog
 						catch (Throwable e)
 						{
 							for (Event event : mNewEvents)
-								pCurrentGame.removeEvent(event);
+								pCurrentGame.removeEvent(event, false);
+							pCurrentGame.recomputeAll(null);
 							pEntityManager.getTransaction().rollback();
 							JOptionPane.showMessageDialog(ImportDialog.this, "Une erreur est survenue : " + e.getClass().getName() + "(" + e.getMessage() + ")", "", JOptionPane.ERROR_MESSAGE);
 						}

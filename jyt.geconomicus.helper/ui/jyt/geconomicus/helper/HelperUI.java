@@ -12,6 +12,7 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -62,6 +63,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -82,8 +84,8 @@ import jyt.geconomicus.helper.Event.EventType;
 
 public class HelperUI extends JFrame
 {
-	protected static final String RELEASE_DATE = "2018/04/13";
-	protected static final String VERSION_NUMBER = "0.9.1";
+	protected static final String RELEASE_DATE = "2018/04/16";
+	protected static final String VERSION_NUMBER = "1.0.0";
 
 	private final static Random sRand = new SecureRandom();
 
@@ -256,6 +258,7 @@ public class HelperUI extends JFrame
 	private class ColorRenderer extends JLabel implements TableCellRenderer
 	{
 		private DefaultTableCellRenderer mDefault = new DefaultTableCellRenderer();
+		private boolean mDeathCandidate = false;
 
 		public ColorRenderer()
 		{
@@ -298,7 +301,20 @@ public class HelperUI extends JFrame
 				break;
 			}
 			setBackground(color);
+			mDeathCandidate = mSuggestedDeathsLabel.getText().contains(mPlayers.get(pRow).getName());
 			return this;
+		}
+
+		@Override
+		protected void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+			if (mDeathCandidate)
+			{
+				g.setColor(Color.darkGray);
+				g.drawLine(0, 0, getWidth(), getHeight());
+				g.drawLine(0, getWidth(), 0, getHeight());
+			}
 		}
 	}
 
@@ -383,22 +399,7 @@ public class HelperUI extends JFrame
 		@Override
 		public boolean isCellEditable(int pRowIndex, int pColumnIndex)
 		{
-			return pColumnIndex == 1;
-		}
-
-		@Override
-		public void setValueAt(Object pAValue, int pRowIndex, int pColumnIndex)
-		{
-			synchronized (mPlayerTable)
-			{
-				super.setValueAt(pAValue, pRowIndex, pColumnIndex);
-				Player player = mPlayers.get(pRowIndex);
-				mEntityManager.getTransaction().begin();
-				player.setName((String)pAValue);
-				mEntityManager.getTransaction().commit();
-				sortPlayers();
-				fillStatusPanel();
-			}
+			return false;
 		}
 	}
 
@@ -418,6 +419,7 @@ public class HelperUI extends JFrame
 	public final static String ACTION_NEW_CREDIT = "c";// Crédit
 	public final static String ACTION_CANNOT_PAY = "d";// Défaut
 	public final static String ACTION_ASSESSMENT_BANK = "e";// Évaluation finale
+	public final static String ACTION_EVENT_DATE = "evt_date";
 	public final static String ACTION_END_GAME = "f";// Fin
 	public final static String ACTION_REIMB_INTEREST = "i";// Intérêt
 	public final static String ACTION_JOIN_PLAYER = "j";// Joueur
@@ -428,6 +430,7 @@ public class HelperUI extends JFrame
 	public final static String ACTION_QUIT_PLAYER = "q";// Quitte
 	public final static String ACTION_QUIT_APP = "qq";// Quitte l'appli
 	public final static String ACTION_REIMB_CREDIT = "r";// Remboursement
+	public final static String ACTION_RENAME_PLAYER = "ren";
 	public final static String ACTION_DELETE_PLAYER = "s";// Supprimer
 	public final static String ACTION_NEW_TURN = "t";// Tour
 	public final static String ACTION_UNEXPECTED_MM_CHANGE = "v";// Vol de la banque 
@@ -480,6 +483,14 @@ public class HelperUI extends JFrame
 				mEntityManager.getTransaction().commit();
 				refreshUI();
 			}
+			else if (ACTION_EVENT_DATE.equals(pEvent.getActionCommand()))
+			{
+				if (mEventTable.getSelectedRowCount() == 1)
+				{
+					new ChangeEventDateDialog(HelperUI.this, mEntityManager, mEvents.get(mEvents.size() - mEventTable.getSelectedRow() - 1)).setVisible(true);;
+					refreshUI();
+				}
+			}
 			else if (ACTION_UNDO.equals(pEvent.getActionCommand()))
 			{
 				if (!mEvents.isEmpty())
@@ -489,7 +500,7 @@ public class HelperUI extends JFrame
 						mEntityManager.getTransaction().begin();
 						final Event toUndo = mEvents.get(mEvents.size() - 1);
 						mEvents.remove(toUndo);
-						mGame.removeEvent(toUndo);
+						mGame.removeEvent(toUndo, true);
 						mEntityManager.getTransaction().commit();
 						if ((mValuesHelper != null) && EventType.TURN.equals(toUndo.getEvt()))
 						{
@@ -606,6 +617,11 @@ public class HelperUI extends JFrame
 						if (principal > 0)
 							createNewEventDebtMoney(player, EventType.REIMB_CREDIT, principal, player.getCurInterest(), 0, 0, 0);
 					}
+					else if (ACTION_RENAME_PLAYER.equals(pEvent.getActionCommand()))
+					{
+						new AddPlayerDialog(HelperUI.this, mGame, mEntityManager, player).setVisible(true);
+						refreshUI();
+					}
 					else if (ACTION_TECH_BREAKTROUGH.equals(pEvent.getActionCommand()))
 						createNewEvent(player, EventType.XTECHNOLOGICAL_BREAKTHROUGH);
 					else if (ACTION_DELETE_PLAYER.equals(pEvent.getActionCommand()))
@@ -621,7 +637,7 @@ public class HelperUI extends JFrame
 									{
 										if (event.getPlayer() == player)
 										{
-											mGame.removeEvent(event);
+											mGame.removeEvent(event, true);
 											mEvents.remove(event);
 										}
 									}
@@ -743,7 +759,7 @@ public class HelperUI extends JFrame
 		mMenuPlayer.setEnabled(enabled);
 	}
 
-	private void createAction(JToolBar pToolBar, String pButtonImage, JMenu pMenu, String pMenuLabel, String pActionName, boolean pPlayerAction)
+	private void createAction(JToolBar pToolBar, String pButtonImage, JMenu pMenu, String pMenuLabel, String pActionShortName, boolean pPlayerAction)
 	{
 		if (pToolBar != null)
 		{
@@ -754,25 +770,30 @@ public class HelperUI extends JFrame
 				final Image img = ImageIO.read(getClass().getResource("/buttons/" + pButtonImage + ".png"));
 				final Graphics g = img.getGraphics();
 				g.setFont(g.getFont().deriveFont(12f).deriveFont(Font.BOLD));
-				final Rectangle2D bounds = g.getFontMetrics().getStringBounds(pActionName.substring(0, 1), g);
+				final Rectangle2D bounds = g.getFontMetrics().getStringBounds(pActionShortName.substring(0, 1), g);
 				g.setColor(Color.black);
-				g.drawString(pActionName.substring(0, 1), 1, (int)(bounds.getHeight() - 2));
+				g.drawString(pActionShortName.substring(0, 1), 1, (int)(bounds.getHeight() - 2));
 				g.dispose();
 				button.setIcon(new ImageIcon(img));
 			}
 			catch (Exception e)
 			{
-				button.setText(pMenuLabel + " (" + pActionName.charAt(0) + ")");
+				button.setText(pMenuLabel + " (" + pActionShortName.charAt(0) + ")");
 			}
-			button.setActionCommand(pActionName);
+			button.setActionCommand(pActionShortName);
 			button.addActionListener(mMyAction);
-			button.setToolTipText(pMenuLabel + " (" + pActionName.charAt(0) + ")");
+			button.setToolTipText(pMenuLabel + " (" + pActionShortName.charAt(0) + ")");
 			pToolBar.add(button);
 			final JPanel separator = new JPanel();
 			separator.setMinimumSize(new Dimension(3, 10));
 			pToolBar.add(separator);
-			mPlayerTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.getExtendedKeyCodeForChar(pActionName.charAt(0)), 0/*InputEvent.CTRL_DOWN_MASK*/), pActionName);
-			mPlayerTable.getActionMap().put(pActionName, mMyAction);
+			if (pActionShortName.length() == 1)
+			{
+				// Do NOT create keyboard shortcuts for names that are not a single char
+				mPlayerTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.getExtendedKeyCodeForChar(pActionShortName.charAt(0)), 0), pActionShortName);
+				mPlayerTable.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.getExtendedKeyCodeForChar(pActionShortName.toUpperCase().charAt(0)), 0), pActionShortName);
+				mPlayerTable.getActionMap().put(pActionShortName, mMyAction);
+			}
 			if (pPlayerAction)
 				mPlayerActionButtons.add(button);
 		}
@@ -780,9 +801,9 @@ public class HelperUI extends JFrame
 		if (pMenu != null)
 		{
 			final JMenuItem menuItem = new JMenuItem(pMenuLabel);
-			menuItem.setMnemonic(pActionName.charAt(0));
+			menuItem.setMnemonic(pActionShortName.charAt(0));
 			menuItem.addActionListener(mMyAction);
-			menuItem.setActionCommand(pActionName);
+			menuItem.setActionCommand(pActionShortName);
 			pMenu.add(menuItem);
 		}
 	}
@@ -800,8 +821,9 @@ public class HelperUI extends JFrame
 
 	private JCheckBoxMenuItem mMenuViewMoneyHelper;
 	private ValuesHelper mValuesHelper = null;
+	private boolean mSwitchingToStats = false;
 
-	public HelperUI(final EntityManager pEntityManager, final Game pGame) throws IOException
+	public HelperUI(final EntityManager pEntityManager, final EntityManagerFactory pEntityManagerFactory, final Game pGame) throws IOException
 	{
 		super("Aide Ğeconomicus");
 		mEntityManager = pEntityManager;
@@ -813,8 +835,11 @@ public class HelperUI extends JFrame
 			public void windowClosing(WindowEvent pEvent)
 			{
 				super.windowClosing(pEvent);
-				mEntityManager.close();
-				System.exit(0);
+				if (!mSwitchingToStats)
+				{
+					mEntityManager.close();
+					System.exit(0);
+				}
 			}
 		});
 		final JPanel mainPanel = new JPanel(new GridBagLayout());
@@ -853,6 +878,7 @@ public class HelperUI extends JFrame
 			createAction(toolbar, "bank_invest", menuGame, "Investissement de la banque...", ACTION_INVEST_BANK, false);
 			createAction(toolbar, "bank_assess", menuGame, "Inventaire de la banque...", ACTION_ASSESSMENT_BANK, false);
 		}
+		createAction(null, "", mMenuPlayer, "Changer le nom du joueur... (F2)", ACTION_RENAME_PLAYER, true);
 		createAction(toolbar, "death", mMenuPlayer, "Mort / renaissance...", ACTION_DEATH, true);
 		createAction(toolbar, "leaves", mMenuPlayer, "Le joueur quitte la partie...", ACTION_QUIT_PLAYER, true);
 		createAction(null, "", menuGame, "Fin de partie", ACTION_END_GAME, false);
@@ -890,6 +916,25 @@ public class HelperUI extends JFrame
 			}
 		});
 		menuView.add(mMenuViewMoneyHelper);
+		final JMenuItem menuViewStats = new JMenuItem("Basculer vers les statistiques");
+		menuViewStats.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent pEvent)
+			{
+				try
+				{
+					new ChooseGamesDialog(pEntityManager, pEntityManagerFactory).setVisible(true);
+					mSwitchingToStats = true;
+					dispatchEvent(new WindowEvent(HelperUI.this, WindowEvent.WINDOW_CLOSING));
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		});
+		menuView.add(menuViewStats);
 		menuBar.add(menuView);
 		final JMenu menuHelp = new JMenu("Aide");
 		final JMenuItem menuItemWebsite = new JMenuItem("Site Web");
@@ -956,6 +1001,19 @@ public class HelperUI extends JFrame
 		}
 		else
 			columnModel.getColumn(3).setPreferredWidth(30);// History (essentially rebirth)
+		mPlayerTable.addKeyListener(new KeyAdapter()
+		{
+			@Override
+			public void keyReleased(KeyEvent pEvent)
+			{
+				super.keyTyped(pEvent);
+				if ((pEvent.getKeyCode() == KeyEvent.VK_F2) && (mPlayerTable.getSelectedRow() >= 0))
+				{
+					mMyAction.actionPerformed(new ActionEvent(mPlayerTable, 0, ACTION_RENAME_PLAYER));
+					pEvent.consume();
+				}
+			}
+		});
 		playerListPane.add(new JScrollPane(mPlayerTable), new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		mPlayerTable.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -976,6 +1034,7 @@ public class HelperUI extends JFrame
 		eventListPane.add(mSuggestedDeathsLabel, new GridBagConstraints(1, 0, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		mEventTableModel = new EventTableModelDebtMoney(pMoneySystem);
 		mEventTable = new JTable(mEventTableModel);
+		mEventTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		eventListPane.add(new JScrollPane(mEventTable), new GridBagConstraints(0, 10, 2, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 		final TableColumnModel columnModel = mEventTable.getColumnModel();
 		columnModel.getColumn(0).setPreferredWidth(70);// date/time
@@ -984,6 +1043,30 @@ public class HelperUI extends JFrame
 		// The additional columns are values for coins and cards
 		for (int i = 3; i < (pMoneySystem == Game.MONEY_DEBT ? 8 : 9); i++)
 			columnModel.getColumn(i).setPreferredWidth(30);
+		mEventTable.addKeyListener(new KeyAdapter()
+		{
+			@Override
+			public void keyReleased(KeyEvent pEvent)
+			{
+				super.keyReleased(pEvent);
+				if ((pEvent.getKeyCode() == KeyEvent.VK_DELETE) && (mEventTable.getSelectedRowCount() > 0))
+				{
+					if (JOptionPane.showConfirmDialog(HelperUI.this, "Êtes-vous sûr de réellement vouloir supprimer " + (mEventTable.getSelectedRowCount() > 1 ? "ces événements" : "cet événement") + " ?\n!!! Cette action n'est PAS RÉVERSIBLE !!!", "Confirmation de suppression d'événements", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION)
+					{
+						final int nbEvents = mEvents.size();
+						final int[] selectedRows = mEventTable.getSelectedRows();
+						mEntityManager.getTransaction().begin();
+						for (int i = 0; i < selectedRows.length; i++)
+							mGame.removeEvent(mEvents.remove(nbEvents - selectedRows[i] - 1), false);
+						mGame.recomputeAll(null);
+						mEntityManager.getTransaction().commit();
+						refreshUI();
+					}
+				}
+				else if ((pEvent.getKeyCode() == KeyEvent.VK_F2) && (mEventTable.getSelectedRowCount() == 1))
+					mMyAction.actionPerformed(new ActionEvent(mEventTable, 0, ACTION_EVENT_DATE));
+			}
+		});
 		return eventListPane;
 	}
 
@@ -1053,7 +1136,7 @@ public class HelperUI extends JFrame
 	{
 		final EntityManagerFactory factory = Persistence.createEntityManagerFactory("geco");
 		final EntityManager entityManager = factory.createEntityManager();
-		new ChooseGameDialog(entityManager).setVisible(true);
+		new ChooseGameDialog(entityManager, factory).setVisible(true);
 	}
 
 	public Game getGame()
@@ -1072,7 +1155,8 @@ public class HelperUI extends JFrame
 		sortEvents();
 		mNonDeadPlayers.clear();
 		for (Player player : mPlayers)
-			mNonDeadPlayers.add(player.getId());
+			if (player.isActive())
+				mNonDeadPlayers.add(player.getId());
 		for (Event event : mEvents)
 			if (EventType.DEATH.equals(event.getEvt()))
 				mNonDeadPlayers.remove(event.getPlayer().getId());
