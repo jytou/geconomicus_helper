@@ -11,7 +11,7 @@ L'utilisation est simple :
 - en monnaie dette, enregistrer les interactions du banquier avec les joueurs (crédits, remboursements, défauts, etc),
 - gérer le renouvellement des générations (le programme conseille les renaissances en fonction du nombre de tours prévus et du nombre de joueurs) et la comptabilisation des valeurs accumulées par les joueurs,
 - en fin de partie, collecter les créations de valeur de la banque et des joueurs,
-- un autre programme se charge d'afficher des statistiques en comparant potentiellement plusieurs parties (idéalement avec les mêmes joueurs dans différentes monnaies).
+- un autre écran se charge d'afficher des statistiques en comparant potentiellement plusieurs parties (idéalement avec les mêmes joueurs dans différentes monnaies).
 
 L'accent est mis sur la rapidité d'utilisation avec des boutons accessibles (les actions sont également accessibles via des menus) et surtout des raccourcis clavier permettant d'effectuer les actions rapidement (un simple remboursement d'intérêts se fait en une touche, un nouveau crédit par défaut en 2 touches).
 Le tout est sauvegardé en temps réel dans une base de données locale en cas de crash et est exportable en XML (il serait aussi facile d'exporter du CSV pour les inconditionnels d'imports dans des tableurs). Il est donc possible de quitter le programme sans crainte en cours de partie, tout est sauvegardé en temps réel sur votre disque dur !
@@ -45,18 +45,21 @@ En créant une partie, on se retrouve avec un écran vide, mais déjà avec plei
 Les différents boutons indiquent les actions disponibles (mis à part quelques unes disponibles uniquement par menu car peu courantes - fin de partie, import/export, changement de description de la partie, rupture technologique). Les raccourcis clavier fonctionnent partout dans l'écran (pas de Ctrl ou Alt, c'est directement la touche concernée qui déclenche l'action), attention si vous avez un chat qui se balade près de l'ordi, il pourrait jouer la partie à lui tout seul !
 Une barre de statut en bas de l'écran est mise à jour en temps réel et donne des indications importantes sur la partie, masse monétaire, nombre de tours, etc.
 
-En début de partie, on ajoute les différents joueurs, en appuyant simplement sur [j], on tape leur nom puis [entrée]. **Bien veiller à avoir des noms de joueurs uniques** (quitte à mettre l'initale de leur nom ou tout autre identifiant permettant de distinguer les deux), sinon comme les tableaux sont triés par ordre alphabétique, il sera impossible de distinguer les deux joueurs.
+En début de partie, on ajoute les différents joueurs, en appuyant simplement sur [j], on tape leur nom puis [entrée]. **Bien veiller à avoir des noms de joueurs uniques** (quitte à mettre l'initale de leur nom ou tout autre identifiant permettant de distinguer les deux), sinon comme les tableaux sont triés par ordre alphabétique, il sera impossible de distinguer les deux joueurs. Des avertissements s'affichent si deux noms de joueurs sont trop ambigus. Il est possible de renommer un joueur en sélectionnant la ligne qui lui correspond, puis de faire F2 ou d'aller dans le menu Joueur/renommer.
+
 Ensuite, il suffit de se balader avec les flèches dans la liste ou de sélectionner le joueur désiré et d'appuyer sur la touche [c] pour indiquer que la banque lui octroie un crédit puis [entrée] directement s'il s'agit d'un crédit de 3 (par défaut) :
 
 ![Nouveau crédit](captures/nouveau_credit.jpg)
 
-Dans la partie de droite apparaissent les différentes actions effectuées dans l'ordre chronologique inverse (le plus récent est en haut, ce qui fait que les plus vieux disparaissent ensuite en bas de l'écran, mais ça reste scrollable bien sûr).
-On peut aussi renommer un joueur en cours de route au besoin en double-cliquant sur son nom.
+Dans la moitié droite de l'écran apparaissent les différentes actions effectuées dans l'ordre chronologique inverse (le plus récent est en haut, ce qui fait que les plus vieux disparaissent ensuite en bas de l'écran, mais ça reste scrollable bien sûr).
+
 Des joueurs peuvent entrer en cours de partie, ou bien sortir de la partie avant la fin (les impondérables arrivent !).
 
-Pour signaler la fin d'un tour, une simple pression sur la touche [t] suffit.
+Pour signaler la fin d'un tour, une simple pression sur la touche [t] suffit : les joueurs devant se présenter à la banque sont alors mis en haut du tableau et en rouge, les nouveaux morts conseillés sont affichés avec un indicateur dans le tableau.
 
-La liste des joueurs est triée par statut puis par ordre alphabétique. Le statut peut être rouge (le joueur doit passer voir la banque), gris (le joueur est en faillite personnelle ou en prison, il passe son tour), ou vert. Une chaîne de caractères en code indique d'un coup d'œil les différentes actions du joueur depuis sa dernière naissance :
+La liste des joueurs est triée par statut puis par ordre alphabétique. Le statut peut être rouge (le joueur doit passer voir la banque), gris (le joueur est en faillite personnelle ou en prison, il passe son tour), orange (ambigüité de noms de deux joueurs), ou vert. Les morts suggérés se voient aussi barrés dans le tableau.
+
+La dernière cellule de droite pour chaque joueur contient une chaîne de caractères en code qui indique d'un coup d'œil les différentes actions du joueur depuis sa dernière naissance :
 
 - M pour la mort,
 - +3 indique un crédit de 3,
@@ -82,9 +85,12 @@ La banque peut également se transformer en banque d'investissement en investiss
 
 ![Banque d'investissement](captures/bank_invest.jpg)
 
-À noter que la dernière action peut être annulée (touche [z]). Une fois annulée, la touche [z] permet d'annuler la précédente et ainsi de suite. On peut donc même annuler toutes les actions de la partie (mais attention il n'y a pas de « redo » pour l'instant, même s'il ne serait pas très difficile de le rajouter, ça ne m'a pas vraiment semblé utile).
+À noter que la dernière action peut être annulée (touche [z]). Une fois annulée, la touche [z] permet d'annuler la précédente et ainsi de suite. On peut donc même annuler toutes les actions de la partie (mais attention il n'y a pas de « redo » pour l'instant, même s'il ne serait pas très difficile de le rajouter, ça ne m'a pas vraiment semblé utile). De même, on peut supprimer des événements en les sélectionnant (le tableau supporte la multi-sélection) et en appuyant sur la touche [Suppr]. Attention, il n'y a aucune vérification sur la cohérence des événements supprimés, à utiliser à vos risques et périls !
+Il est aussi possible de changer la date d'un événement pour les cas à la marge. Là encore, à utiliser avec parcimonie, et uniquement si vous êtes sûr de vous.
 
 En fin de partie, on fait l'inventaire des valeurs possédées par les joueurs en les faisant « quitter » la partie, puis on termine en indiquant l'événement « fin de partie » dans le menu.
+
+On peut allors passer à la visualisation des statistiques en allant dans le menu Vue/Statistiques.
 
 En monnaie libre, le nombre d'actions est plus limité puisqu'il n'y a pas de banque, voici un écran de fin de partie en monnaie libre :
 
@@ -109,11 +115,11 @@ L'animateur du jeu et le banquier peuvent très bien utiliser deux instances du 
 
 - en cours de partie, l'animateur note comme toujours ses données d'animation, morts/naissances avec valeurs associées, changements de tours, état des lieux des valeurs (monnaie et cartes valeurs) en fin de partie,
 - le banquier, lui, note uniquement ses données de banquier, attributions de crédits, remboursements, défauts de paiement, investissements de la banque, etc., il doit aussi noter les inventaires monétaires des morts pour que sa masse monétaire ne soit pas faussée (lors de l'import des événements du banquier dans la partie de l'animateur, ces événements « non bancaires » seront ignorés),
-- en fin de partie, le banquier peut exporter sa partie et l'animateur importe uniquement les données de la banque, les événements étant horodatés, ils devraient s'insérer au bon endroit dans la base de l'animateur.
+- en fin de partie, le banquier peut exporter sa partie et l'animateur importe uniquement les données de la banque, les événements étant horodatés, ils devraient s'insérer au bon endroit dans la base de l'animateur si les horloges des deux ordinateurs étaient bien synchronisées.
 
 Lorsque la partie en monnaie libre commence, l'animateur peut simplement importer les noms des joueurs depuis la partie en monnaie dette qu'il a déjà en base.
 
-À noter que la base est actuellement une base H2 qui peut être accédée par la commande suivante (dans le répertoire où se trouve le jar) :
+À noter que la base de données est actuellement une base H2 qui peut être accédée par la commande suivante (dans le répertoire où se trouve le jar) :
 
 >java -cp gecohelper.jar org.h2.tools.Console
 
@@ -122,7 +128,9 @@ Attention, tant que vous êtes connecté à la base dans votre navigateur, vous 
 
 # Fin de partie et statistiques
 
-Lorsque les deux parties (monnaie dette et monnaie libre) sont terminées, c'est le temps des statistiques. Il faut d'abord fermer le programme d'aide au Ğeconomicus puis lancer le programme de statistiques :
+Lorsque les deux parties (monnaie dette et monnaie libre) sont terminées, c'est le temps des statistiques. Si vous n'avez pas quitté le programmes, les statistiques sont disponibles directement depuis le menu Vue/Statistiques. Sinon, ouvrez le programme, et choisissez le bouton « Je veux juste les stats ! » dans la boîte de dialogue de choix de partie. Une autre boîte de dialogue s'ouvre.
+
+On peut aussi lancer les statistiques manuellement :
 
 >java -cp gecohelper.jar jyt.geconomicus.helper.ChooseGamesDialog
 
@@ -132,7 +140,7 @@ On choisit alors les deux parties qui nous intéressent (il est techniquement po
 
 La fenêtre principale peut directement être projetée à l'audience et contient toutes les statistiques sur les deux parties. Elle s'adapte à la taille de l'écran pour maximiser la place occupée afin d'être la plus visible possible.
 
-Le premier onglet est la partie en monnaie-dette sans la banque, avec la moyenne et l'écart-type (en pourcentage de la moyenne) :
+Le premier onglet est la partie en monnaie-dette sans la banque, avec la moyenne, l'écart-type (en pourcentage de la moyenne), et le seuil de pauvreté (60% de la médiane) :
 
 ![Statistiques de la partie en monnaie-dette sans la banque](captures/statmdssbank.jpg)
 
@@ -148,9 +156,18 @@ On passe ensuite à la partie en monnaie libre :
 
 ![Statistiques de la partie en monnaie libre](captures/statml.jpg)
 
+La monnaie libre a elle-aussi son historique de masse monétaire approximatif. Même si cet écran n'a que peu d'intérêt d'analyse, cela montre à l'audience visuellement la différence flagrante avec la monnaie-dette et l'absence d'asséchement monétaire qui les a tant handicapés en monnaie-dette.
+
 Et enfin, le dernier onglet aggrège les résultats des deux parties (ou plus !), qui permet de comparer d'un coup d'œil les résultats, en particulier la moyenne de création de valeurs et la différence d'écart-type entre les deux parties :
 
 ![Statistiques aggrégées](captures/stataggreges.jpg)
+
+Des statistiques « corrigées » intègrent également une version avec les corrections suivantes :
+
+- dans les deux parties, on soustrait les 8 cartes de départ des valeurs créées par les joueurs,
+- dans la partie en monnaie libre, on soustrait le double du DU moyen puisqu'il ne s'agit que de monnaie, pas de création de valeur.
+
+Ce dernier onglet est plutôt à réserver aux animateurs, inutile de prendre la tête du public avec ça, mais en cas de questions du genre « mais je n'ai pas créé autant de valeurs puisque je suis parti avec des cartes », cela peut être pratique pour montrer que ça ne change pas les conclusions générales.
 
 # Sauvegardes
 
@@ -171,7 +188,7 @@ Ceci dit, en cas de plantage PC irrécupérable (crash de disque dur, etc), on n
 
 - En cas de hold-up de la banque ou autre événement imprévu, il est possible d'ajuster manuellement la masse monétaire.
 
-- Il est possible de supprimer totalement un joueur (et ses actions associées), à utiliser avec parcimonie. Ce peut être utile dans le cas où on importe les joueurs du jeu en monnaie dette dans le jeu en monnaie libre, mais un joueur a décidé de ne pas participer au deuxième jeu et ne doit donc tout simplement pas figurer dans le deuxième jeu (ça risque de fausser les données…). Dans le cas où une personne en remplace une autre d'une partie à l'autre, il est conseillé de changer son nom en fin de partie pour que les noms correspondent : en effet les statistiques se basent sur le nom pour identifier les joueurs.
+- Il est possible de supprimer totalement un joueur (et ses actions associées), à utiliser avec parcimonie. Ce peut être utile dans le cas où on importe les joueurs du jeu en monnaie dette dans le jeu en monnaie libre, mais un joueur a décidé de ne pas participer au deuxième jeu et ne doit donc tout simplement pas figurer dans le deuxième jeu (ça risque de fausser les données…). Dans le cas où une personne en remplace une autre d'une partie à l'autre, il est conseillé de renseigner le même nom (quitte à mettre les noms des deux joueurs séparés par un tiret) : en effet les statistiques se basent sur le nom pour identifier les joueurs d'une partie à l'autre.
 
 # Pour les avides de ligne de commande
 
@@ -196,7 +213,6 @@ La couche métier est séparée (elle est utilisée par le programme principal, 
 
 # Améliorations
 
-- Améliorer l'import (pouvoir importer une partie complète, par exemple), c'est simple mais pas encore fait,
 - faire un splash screen,
 - améliorer les écrans, visuellement,
 - afficher les valeurs faibles/moyennes/fortes en cours (mais elles changent uniquement en cas de rupture technologique, ce qui est assez rare pour qu'on puisse s'en passer à mon avis),
@@ -204,40 +220,3 @@ La couche métier est séparée (elle est utilisée par le programme principal, 
 - internationaliser les messages (qui sont actuellement en français vu que le public susceptible d'utiliser l'appli aujourd'hui est essentiellement francophone).
 
 N'hésitez pas à faire des *issues*.
-
-# Nouvelle version 0.9.1
-
-Comme je n'ai pas le temps de mettre à jour ce fichier ce soir, voici quelques améliorations dans la version d'aujourd'hui :
-
-- corrections de multiples bugs dans les calculs de gains des joueurs et de la banque,
-- correction de l'import d'événements particuliers qui ne triait pas les événements dans le bon ordre ensuite,
-- l'import d'une partie complète est maintenant possible dans la boîte de dialogue de choix de la partie, on ouvre ensuite cette partie importée,
-- la fenêtre principale de saisie des valeurs a été améliorée pour afficher des labels plus pertinents en fonction des cas (remboursement, défaut de paiement, mort, etc),
-- on peut maintenant éditer les saisies des événements, pratique en cas d'erreur de saisie,
-- le programme montre des avertissements si des noms de joueurs sont trop proches (préférer par exemple « Joueur M » et « Joueur A » plutôt que « Joueur M » et « Joueur »),
-- la gestion des morts a été améliorée/corrigée,
-- il est possible de saisir une valeur négative lors de la mise à jour de la masse monétaire suite à un événement imprévu,
-- l'affichage de l'écart-type dans les stats va maintenant jusqu'à 150%, j'espère que ça sera suffisant,
-- un nouveau graphique avec la version « corrigée » (-8 cartes pour les joueurs et -7 en monnaie libre).
-
-# Nouvelle version 1.0.0
-
-Suite au jeu à Saint-Clair du Rhône le 14/04/2018, quelques améliorations :
-
-- la boîte de dialogue de choix de partie a été retouchée pour être un peu plus ergonomique,
-- ajout d'un champ pour définir la relation entre la valeur de la monnaie et celle les cartes. En d'autres termes, si une carte vaut 1 ou 2 unités monétaires en monnaie-dette (en monnaie libre c'est 3 ou 6),
-- le changement de nom des joueurs ne se fait plus dans le tableau car cela posait de nombreux problèmes, c'est maintenant accessible par un menu ou la touche F2,
-- les statistiques finales sont directement accessibles soit par un menu dans l'application principale, soit par un bouton dans la boîte de dialogue de choix de partie,
-- correction d'un bug qui faisait que les statistiques standards n'étaient pas affichées lorsqu'on sélectionnait uniquement une partie en monnaie libre,
-- correction du bug lorsqu'on voulait annuler un changement de couleurs de billet dans la fenêtre de rotation des billets en monnaie libre,
-- les champs sont sélectionnés dans la saisie de valeurs lorsqu'ils ont le focus pour qu'on saisisse la valeur en supprimant le 0 d'origine (laisser un 0 dans le champ était plutôt agaçant),
-- l'affichage corrigé ne prenait pas en compte l'ajustement des cartes pour la monnaie libre,
-- l'affichage du nombre de tours commence maintenant à 0, et indique donc le nombre de tours « passés », du coup l'indication du nombre de tours prévus est le nombre de tours exact (alors qu'il fallait ajouter 1 précédemment),
-- un nouveau graphique de masse monétaire en monnaie libre a été ajouté, il est presque tout plat et n'apporte aucune information supplémentaire, mais permet au public de réaliser visuellement la différence entre les variations de masse monétaire en monnaie libre et en monnaie dette,
-- les joueurs non actifs (ont quitté la partie en cours de route) ne sont plus candidats à la mort…
-- les morts suggérés ont une marque visible dans le tableau des joueurs,
-- un indicateur a été ajouté pour montrer la proportion de « pauvres » (60% de la médiane) dans les graphiques de statistiques qui ont été légèrement améliorés,
-- on peut supprimer n'importe quelle série d'événements en appuyant sur « suppr » après avoir sélectionné des lignes dans la table des événements (pour les plus téméraires uniquement !), et changer la date d'un événement (F2).
-
-Cette version est déjà totalement opérationnelle, même si elle mériterait d'être améliorée pour les « non habitués ». N'hésitez pas à faire des issues pour qu'on voie ce qui est le plus urgent dans le futur.
-
