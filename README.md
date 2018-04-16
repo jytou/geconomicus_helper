@@ -1,6 +1,8 @@
-Un programme pour aider à animer les jeux Ğeconomicus, y compris pour le banquier. Il s'agit pour l'instant uniquement d'un programme pour ordinateur supportant java (pas d'appli mobile).
+Un programme pour aider à animer les jeux Ğeconomicus, y compris pour le banquier. Il s'agit pour l'instant uniquement d'un programme pour ordinateur supportant java 8 (pas d'appli mobile).
 
 # Introduction
+
+Le seul prérequis est d'avoir java 8 installé sur votre machine.
 
 L'utilisation est simple :
 
