@@ -38,6 +38,10 @@ Ou bien créer une partie dans la même boîte de dialogue :
 
 ![Nouvelle partie](captures/nvellepartie.jpg)
 
+À noter que le « facteur carte/monnaie » représente le nombre d'unités monétaires (le nombre de jetons ou billets de valeur faible) nécessaires pour échanger une carte faible en monnaie-dette (en monnaie libre, c'est toujours 3 fois cette valeur). Les règles officielles spécifient 2, mais certaines variantes utilisent 1 (une unité monétaire pour une carte).
+
+Enfin, on peut aussi importer une partie qui a été exportée en XML.
+
 En créant une partie, on se retrouve avec un écran vide, mais déjà avec plein d'indications :
 
 ![Écran principal](captures/ecranprincipal.jpg)
