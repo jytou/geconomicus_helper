@@ -324,6 +324,10 @@ public class StatsFrame extends JFrame
 						g.fillRect(frameWidth + pos + barPos, h - frameHeight, barWidth, -value);
 					x++;
 				}
+			}
+			for (int i = 0; i < mAverages.size(); i++)
+			{
+				g.setColor(mColors.get(i).darker());
 				// standard deviation
 				setDashedLines(g2);
 				final int stdY = h - frameHeight - (int)(mStdDevs.get(i) * usableHeight / 1.5);// because we go up to 150% in the graph

@@ -86,7 +86,7 @@ public class ChooseGamesDialog extends JFrame
 
 	public ChooseGamesDialog(final EntityManager pEntityManager, final EntityManagerFactory pFactory) throws IOException
 	{
-		super("Choose Games to compare");
+		super("Choisir les parties à comparer");
 		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus_stats.png")));
 		addWindowListener(new WindowAdapter()
 		{
@@ -105,9 +105,9 @@ public class ChooseGamesDialog extends JFrame
 		setLocation(screenSize.width / 2 - size.width/2, screenSize.height / 2 - size.height/2);
 		final JPanel mainPanel = new JPanel(new GridBagLayout());
 		final Insets insets = new Insets(0, 0, 0, 0);
-		final JButton openGamesButton = new JButton("Ouvrir ces jeux");
+		final JButton openGamesButton = new JButton("Ouvrir ces parties");
 		mainPanel.add(openGamesButton, new GridBagConstraints(0, 1, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
-		mGames = pEntityManager.createNamedQuery("Game.findAll").getResultList();
+		feedGames(pEntityManager);
 		final JTable gamesTable = new JTable(new GamesTableModel());
 		gamesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener()
 		{
@@ -148,5 +148,11 @@ public class ChooseGamesDialog extends JFrame
 		openGamesButton.getActionMap().put("openGame", openGameAction);
 		getContentPane().add(mainPanel);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+	}
+
+	@SuppressWarnings("unchecked")
+	public void feedGames(final EntityManager pEntityManager)
+	{
+		mGames = pEntityManager.createNamedQuery("Game.findAll").getResultList();
 	}
 }
