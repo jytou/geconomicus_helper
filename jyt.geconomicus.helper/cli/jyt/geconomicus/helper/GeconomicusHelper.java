@@ -16,56 +16,56 @@ public class GeconomicusHelper
 		if (args.length == 0)
 			usage();
 
-		final EntityManagerFactory factory = Persistence.createEntityManagerFactory("geco");
+		final EntityManagerFactory factory = Persistence.createEntityManagerFactory("geco"); //$NON-NLS-1$
 		final EntityManager em = factory.createEntityManager();
 		final String command = args[0].toLowerCase();
-		if ("list".equals(command))
+		if ("list".equals(command)) //$NON-NLS-1$
 		{
 			@SuppressWarnings("unchecked")
-			final List<Game> games = em.createNamedQuery("Game.findAll").getResultList();
+			final List<Game> games = em.createNamedQuery("Game.findAll").getResultList(); //$NON-NLS-1$
 			for (Game game : games)
 				System.out.println(game.toString());
 		}
-		else if ("new".equals(command))
+		else if ("new".equals(command)) //$NON-NLS-1$
 		{
 			if (args.length != 3)
 			{
-				System.err.println("New game needs a date and location");
+				System.err.println("New game needs a date and location"); //$NON-NLS-1$
 				usage();
 			}
 			final String curDate = args[1];
 			final String location = args[2];
 			em.getTransaction().begin();
-			final Game game = new Game(Game.MONEY_DEBT, 10, "jytou", "jytou@jytou.geconomicus", "", curDate, location, 1);
+			final Game game = new Game(Game.MONEY_DEBT, 10, "jytou", "jytou@jytou.geconomicus", "", curDate, location, 1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			em.persist(game);
 			em.getTransaction().commit();
-			System.out.println("Created new game " + game.toString());
+			System.out.println("Created new game " + game.toString()); //$NON-NLS-1$
 		}
-		else if ("use".equals(command))
+		else if ("use".equals(command)) //$NON-NLS-1$
 		{
 			if (args.length < 3)
 			{
-				System.err.println("USE needs more arguments");
+				System.err.println("USE needs more arguments"); //$NON-NLS-1$
 				usage();
 			}
 			final int gameId = Integer.valueOf(args[1]);
 			final Game game = em.find(Game.class, gameId);
 			final String subCmd = args[2].toLowerCase();
-			if ("status".equals(subCmd))
+			if ("status".equals(subCmd)) //$NON-NLS-1$
 			{
 				if (args.length == 4)
 				{
 					final Player player = em.find(Player.class, Integer.valueOf(args[3]));
 					if (player == null)
 					{
-						System.err.println("Player " + args[3] + " not found");
+						System.err.println("Player " + args[3] + " not found"); //$NON-NLS-1$ //$NON-NLS-2$
 						usage();
 					}
 					// history of the player
 					for (Event event : game.getEvents())
 					{
 						if (player == event.getPlayer())
-							System.out.println(event.getEvt().getDescription() + " - " + event.details());
+							System.out.println(event.getEvt().getDescription() + " - " + event.details()); //$NON-NLS-1$
 					}
 					System.out.println(player.toString());
 				}
@@ -73,28 +73,28 @@ public class GeconomicusHelper
 				// simple status of the whole game
 				{
 					System.out.println(game.toString());
-					System.out.println(" ***** PLAYERS ******");
+					System.out.println(" ***** PLAYERS ******"); //$NON-NLS-1$
 					for (Player player : game.getPlayers())
-						System.out.println("\t" + player.toString());
+						System.out.println("\t" + player.toString()); //$NON-NLS-1$
 				}
 			}
-			else if ("history".equals(subCmd))
+			else if ("history".equals(subCmd)) //$NON-NLS-1$
 			{
 				for (Event event : game.getEvents())
 					System.out.println(event);
 			}
-			else if ("create".equals(subCmd))
+			else if ("create".equals(subCmd)) //$NON-NLS-1$
 			{
 				if (args.length < 4)
 				{
-					System.err.println("Subcommand CREATE needs a player name");
+					System.err.println("Subcommand CREATE needs a player name"); //$NON-NLS-1$
 					usage();
 				}
 				final StringBuilder sb = new StringBuilder();
 				for (int i = 3; i < args.length; i++)
 				{
 					sb.append(args[i]);
-					sb.append(" ");
+					sb.append(" "); //$NON-NLS-1$
 				}
 				final String playerName = sb.toString().trim();
 				em.getTransaction().begin();
@@ -104,19 +104,19 @@ public class GeconomicusHelper
 				event.applyEvent();
 				em.persist(event);
 				em.getTransaction().commit();
-				System.out.println("Created player " + player.toString());
+				System.out.println("Created player " + player.toString()); //$NON-NLS-1$
 			}
-			else if ("event".equals(subCmd))
+			else if ("event".equals(subCmd)) //$NON-NLS-1$
 			{
 				if (args.length < 4)
 				{
-					System.err.println("Subcommand EVENT needs an event type");
+					System.err.println("Subcommand EVENT needs an event type"); //$NON-NLS-1$
 					usage();
 				}
 				final String evtTypeString = args[3];
 				if (!EventTypeConverter.isValidEventType(evtTypeString))
 				{
-					System.err.println("Event type " + evtTypeString + " is unknown");
+					System.err.println("Event type " + evtTypeString + " is unknown");  //$NON-NLS-1$//$NON-NLS-2$
 					usage();
 				}
 				Player player = null;
@@ -124,13 +124,13 @@ public class GeconomicusHelper
 				{
 					if (args.length < 5)
 					{
-						System.err.println("Event type " + evtTypeString + " needs a player");
+						System.err.println("Event type " + evtTypeString + " needs a player"); //$NON-NLS-1$ //$NON-NLS-2$
 						usage();
 					}
 					player = em.find(Player.class, Integer.valueOf(args[4]));
 					if (player == null)
 					{
-						System.err.println("Player " + args[4] + " not found");
+						System.err.println("Player " + args[4] + " not found"); //$NON-NLS-1$ //$NON-NLS-2$
 						usage();
 					}
 				}
@@ -166,19 +166,19 @@ public class GeconomicusHelper
 				}
 				event.applyEvent();
 				em.getTransaction().commit();
-				System.out.println("Created event " + event.toString());
+				System.out.println("Created event " + event.toString()); //$NON-NLS-1$
 			}
 			else
 			{
-				System.err.println("Unknown subcommand " + subCmd + " for command USE");
+				System.err.println("Unknown subcommand " + subCmd + " for command USE"); //$NON-NLS-1$ //$NON-NLS-2$
 				usage();
 			}
 		}
-		else if ("del".equals(command))
+		else if ("del".equals(command)) //$NON-NLS-1$
 		{
 			if (args.length < 2)
 			{
-				System.err.println("DEL needs more arguments");
+				System.err.println("DEL needs more arguments"); //$NON-NLS-1$
 				usage();
 			}
 			final int gameId = Integer.valueOf(args[1]);
@@ -186,11 +186,11 @@ public class GeconomicusHelper
 			em.getTransaction().begin();
 			em.remove(game);;
 			em.getTransaction().commit();
-			System.out.println("Deleted game #" + args[1]);
+			System.out.println("Deleted game #" + args[1]); //$NON-NLS-1$
 		}
 		else
 		{
-			System.err.println("Unknown command " + command);
+			System.err.println("Unknown command " + command); //$NON-NLS-1$
 			usage();
 		}
 		em.close();
@@ -198,19 +198,19 @@ public class GeconomicusHelper
 
 	private static void usage()
 	{
-		System.out.println("Usage:");
-		System.out.println("list: list all games");
-		System.out.println("new <date> <location>: creates a game at the given date and location");
-		System.out.println("use <game-id>");
-		System.out.println("\tstatus [<player-id>]: the current status of the whole game or of a single player");
-		System.out.println("\tcreate <player-name>: create a new player in the game and make him join (the join event is automatically created)");
-		System.out.println("\tevent <event-type-code> [<player-id> [[<interest> [<principal>]|[low-medium-high coins] [low - medium - high cards]]]]");
-		System.out.println("\thistory: all events in the game");
-		System.out.println("\tdel <game-id> to be used only when you know what you are doing!");
+		System.out.println("Usage:"); //$NON-NLS-1$
+		System.out.println("list: list all games"); //$NON-NLS-1$
+		System.out.println("new <date> <location>: creates a game at the given date and location"); //$NON-NLS-1$
+		System.out.println("use <game-id>"); //$NON-NLS-1$
+		System.out.println("\tstatus [<player-id>]: the current status of the whole game or of a single player"); //$NON-NLS-1$
+		System.out.println("\tcreate <player-name>: create a new player in the game and make him join (the join event is automatically created)"); //$NON-NLS-1$
+		System.out.println("\tevent <event-type-code> [<player-id> [[<interest> [<principal>]|[low-medium-high coins] [low - medium - high cards]]]]"); //$NON-NLS-1$
+		System.out.println("\thistory: all events in the game"); //$NON-NLS-1$
+		System.out.println("\tdel <game-id> to be used only when you know what you are doing!"); //$NON-NLS-1$
 		System.out.println();
-		System.out.println("List of event codes:");
+		System.out.println("List of event codes:"); //$NON-NLS-1$
 		for (EventType eventType : EventType.values())
-			System.out.println("\t" + eventType.name().toLowerCase().charAt(0) + " : " + eventType.getDescription());
+			System.out.println("\t" + eventType.name().toLowerCase().charAt(0) + " : " + eventType.getDescription()); //$NON-NLS-1$ //$NON-NLS-2$
 		System.exit(1);
 	}
 

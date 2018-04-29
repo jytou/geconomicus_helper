@@ -45,6 +45,8 @@ import jyt.geconomicus.helper.Event.EventType;
 
 public class ImportDialog extends JDialog
 {
+	private static final String CANCEL_ACTION = "cancel"; //$NON-NLS-1$
+
 	private List<Player> mNewPlayers = new ArrayList<>();
 	private List<Event> mNewEvents = new ArrayList<>();
 	private boolean mApplied = false;
@@ -65,8 +67,8 @@ public class ImportDialog extends JDialog
 
 	public ImportDialog(final JFrame pParentFrame, final Game pCurrentGame, final EntityManager pEntityManager) throws IOException
 	{
-		super(pParentFrame, "Importer une partie");
-		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus.png")));
+		super(pParentFrame, UIMessages.getString("ImportDialog.Title.ImportGame")); //$NON-NLS-1$
+		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus.png"))); //$NON-NLS-1$
 		Dimension size = new Dimension(900, 300);
 		setSize(size);
 		setModal(true);
@@ -74,14 +76,14 @@ public class ImportDialog extends JDialog
 		setLocation(screenSize.width / 2 - size.width/2, screenSize.height / 2 - size.height/2);
 		final JPanel mainPanel = new JPanel(new GridBagLayout());
 		final JPanel sourcePanel = new JPanel(new GridBagLayout());
-		sourcePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), "Source"));
+		sourcePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), UIMessages.getString("ImportDialog.Panel.Label.SourceOfImport"))); //$NON-NLS-1$
 
 		final ButtonGroup sourceGroup = new ButtonGroup();
-		final JRadioButton rbFromDB = new JRadioButton("En base de données");
+		final JRadioButton rbFromDB = new JRadioButton(UIMessages.getString("ImportDialog.Label.SourceDatabase")); //$NON-NLS-1$
 		sourceGroup.add(rbFromDB);
 		sourcePanel.add(rbFromDB, new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		@SuppressWarnings("unchecked")
-		final List<Game> games = pEntityManager.createNamedQuery("Game.findAll").getResultList();
+		final List<Game> games = pEntityManager.createNamedQuery("Game.findAll").getResultList(); //$NON-NLS-1$
 		for (Iterator<Game> itGame = games.iterator(); itGame.hasNext();)
 			if (itGame.next().getId().equals(pCurrentGame.getId()))
 				itGame.remove();
@@ -89,23 +91,23 @@ public class ImportDialog extends JDialog
 		final JComboBox<Game> gameCombo = new JComboBox<>(games.toArray(new Game[games.size()]));
 		sourcePanel.add(gameCombo, new GridBagConstraints(1, 0, 2, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 
-		final JRadioButton rbFromXml = new JRadioButton("D'un fichier XML");
+		final JRadioButton rbFromXml = new JRadioButton(UIMessages.getString("ImportDialog.Label.SourceXmlFile")); //$NON-NLS-1$
 		sourceGroup.add(rbFromXml);
 		sourcePanel.add(rbFromXml, new GridBagConstraints(0, 1, 1, 1, 0, 0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		final JTextField xmlFileTF = new JTextField();
 		sourcePanel.add(xmlFileTF, new GridBagConstraints(1, 1, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		final JButton chooseXmlFileButton = new JButton("Ouvrir...");
+		final JButton chooseXmlFileButton = new JButton(UIMessages.getString("ImportDialog.Button.Label.Open")); //$NON-NLS-1$
 		sourcePanel.add(chooseXmlFileButton, new GridBagConstraints(2, 1, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		sourceGroup.setSelected(rbFromDB.getModel(), true);
 		mainPanel.add(sourcePanel, new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));
 
 		final JPanel actionPanel = new JPanel();
-		actionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), "Action"));
+		actionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), UIMessages.getString("ImportDialog.Panel.Label.ActionToPerform"))); //$NON-NLS-1$
 		final ButtonGroup actionGroup = new ButtonGroup();
-		final JRadioButton importPlayerNamesAction = new JRadioButton("Importer les noms des joueurs");
+		final JRadioButton importPlayerNamesAction = new JRadioButton(UIMessages.getString("ImportDialog.Option.Label.ImportPlayerNames")); //$NON-NLS-1$
 		actionPanel.add(importPlayerNamesAction, new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		actionGroup.add(importPlayerNamesAction);
-		final JRadioButton importBankEventsAction = new JRadioButton("Importer les événements de la banque");
+		final JRadioButton importBankEventsAction = new JRadioButton(UIMessages.getString("ImportDialog.Option.Label.ImportBankEvents")); //$NON-NLS-1$
 		actionPanel.add(importBankEventsAction, new GridBagConstraints(0, 1, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		actionGroup.add(importBankEventsAction);
 		actionGroup.setSelected(importPlayerNamesAction.getModel(), true);
@@ -113,7 +115,7 @@ public class ImportDialog extends JDialog
 
 		final JPanel buttonsPanel = new JPanel();
 		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.X_AXIS));
-		final JButton importGameButton = new JButton("Importer !");
+		final JButton importGameButton = new JButton(UIMessages.getString("ImportDialog.Button.Label.Import")); //$NON-NLS-1$
 		final Action importGameAction = new AbstractAction()
 		{
 			@Override
@@ -134,12 +136,12 @@ public class ImportDialog extends JDialog
 					}
 					catch (PropertyException e)
 					{
-						JOptionPane.showMessageDialog(rootPane, "Erreur durant l'import : " + e.getClass().getName() + " (" + e.getMessage() + ")", "Erreur", JOptionPane.ERROR_MESSAGE);
+						UIUtil.showExceptionMessage(ImportDialog.this, e);
 						return;
 					}
 					catch (JAXBException e)
 					{
-						JOptionPane.showMessageDialog(rootPane, "Erreur durant l'import : " + e.getClass().getName() + " (" + e.getMessage() + ")", "Erreur", JOptionPane.ERROR_MESSAGE);
+						UIUtil.showExceptionMessage(ImportDialog.this, e);
 						return;
 					}
 				}
@@ -171,7 +173,7 @@ public class ImportDialog extends JDialog
 								pCurrentGame.removePlayer(player);
 							mNewPlayers.clear();
 							pEntityManager.getTransaction().rollback();
-							JOptionPane.showMessageDialog(ImportDialog.this, "Une erreur est survenue : " + e.getClass().getName() + "(" + e.getMessage() + ")", "", JOptionPane.ERROR_MESSAGE);
+							UIUtil.showExceptionMessage(ImportDialog.this, e);
 						}
 					}
 					else if (actionGroup.isSelected(importBankEventsAction.getModel()))
@@ -191,7 +193,7 @@ public class ImportDialog extends JDialog
 								pCurrentGame.removeEvent(event, false);
 							pCurrentGame.recomputeAll(null);
 							pEntityManager.getTransaction().rollback();
-							JOptionPane.showMessageDialog(ImportDialog.this, "Une erreur est survenue : " + e.getClass().getName() + "(" + e.getMessage() + ")", "", JOptionPane.ERROR_MESSAGE);
+							UIUtil.showExceptionMessage(ImportDialog.this, e);
 						}
 					}
 				}
@@ -210,7 +212,7 @@ public class ImportDialog extends JDialog
 			public void actionPerformed(ActionEvent pEvent)
 			{
 				final JFileChooser fc = new JFileChooser();
-				fc.setFileFilter(new FileNameExtensionFilter("xml", "xml"));
+				fc.setFileFilter(new FileNameExtensionFilter("xml", "xml"));  //$NON-NLS-1$//$NON-NLS-2$
 				if (fc.showOpenDialog(ImportDialog.this) == JFileChooser.APPROVE_OPTION)
 				{
 					xmlFileTF.setText(fc.getSelectedFile().getAbsolutePath());
@@ -220,18 +222,18 @@ public class ImportDialog extends JDialog
 			}
 		});
 
-		final JButton cancelButton = new JButton("Annuler");
+		final JButton cancelButton = new JButton(UIMessageKeyProvider.DIALOG_BUTTON_CANCEL.getMessage());
 		final Action cancelAction = new AbstractAction()
 		{
 			@Override
 			public void actionPerformed(ActionEvent pEvent)
 			{
-				if (JOptionPane.showConfirmDialog(ImportDialog.this, "Voulez-vous vraiment annuler ?", "Annuler ?", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+				if (JOptionPane.showConfirmDialog(ImportDialog.this, UIMessageKeyProvider.DIALOG_MESSAGE_CANCEL.getMessage(), UIMessageKeyProvider.DIALOG_TITLE_CANCEL.getMessage(), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
 					setVisible(false);
 			}
 		};
-		mainPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
-		mainPanel.getActionMap().put("cancel", cancelAction);
+		mainPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), ImportDialog.CANCEL_ACTION);
+		mainPanel.getActionMap().put(ImportDialog.CANCEL_ACTION, cancelAction);
 		cancelButton.addActionListener(cancelAction);
 		buttonsPanel.add(cancelButton);
 		mainPanel.add(buttonsPanel, new GridBagConstraints(0, 2, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));

@@ -16,6 +16,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
+import java.text.MessageFormat;
 
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
@@ -102,19 +103,19 @@ public class ValuesHelper extends JFrame
 					{
 						if ((cx >= spacew) && (cx <= spacew + cardw))
 						{
-							mWeakValueColor = chooseNewColor("faible", mWeakValueColor);
+							mWeakValueColor = chooseNewColor(UIMessages.getString("Frame.ValuesHelper.WeakCardsColor.Label"), mWeakValueColor); //$NON-NLS-1$
 							repaint();
 							return;
 						}
 						else if ((cx >= spacew * 2 + cardw) && (cx <= spacew * 2 + cardw * 2))
 						{
-							mMediumValueColor = chooseNewColor("moyenne", mMediumValueColor);
+							mMediumValueColor = chooseNewColor(UIMessages.getString("Frame.ValuesHelper.MediumCardsColor.Label"), mMediumValueColor); //$NON-NLS-1$
 							repaint();
 							return;
 						}
 						else if ((cx >= spacew * 3 + cardw * 2) && (cx <= spacew * 3 + cardw * 3))
 						{
-							mStrongValueColor = chooseNewColor("forte", mStrongValueColor);
+							mStrongValueColor = chooseNewColor(UIMessages.getString("Frame.ValuesHelper.StrongCardsColor.Label"), mStrongValueColor); //$NON-NLS-1$
 							repaint();
 							return;
 						}
@@ -124,7 +125,7 @@ public class ValuesHelper extends JFrame
 					{
 						if ((cx >= spacew * 2 + cardw) && (cx <= spacew * 2 + cardw * 2))
 						{
-							mWaitingColor = chooseNewColor("en attente", mWaitingColor);
+							mWaitingColor = chooseNewColor(UIMessages.getString("Frame.ValuesHelper.WaitingCardsColor.Label"), mWaitingColor); //$NON-NLS-1$
 							repaint();
 							return;
 						}
@@ -134,7 +135,7 @@ public class ValuesHelper extends JFrame
 
 				public Color chooseNewColor(final String pValueType, final Color pOriginalColor)
 				{
-					final Color color = JColorChooser.showDialog(ValuesHelper.this, "Choisir une couleur pour la valeur " + pValueType, pOriginalColor);
+					final Color color = JColorChooser.showDialog(ValuesHelper.this, MessageFormat.format(UIMessages.getString("Frame.ValuesHelper.Title.ChooseAColorForValue"), pValueType), pOriginalColor); //$NON-NLS-1$
 					if (color != null)
 						return color;
 					else
@@ -172,14 +173,14 @@ public class ValuesHelper extends JFrame
 			g.drawRect(spacew * 2 + cardw, spaceh, cardw, cardh);
 			g.drawRect(spacew * 3 + cardw * 2, spaceh, cardw, cardh);
 			g.drawRect(spacew * 2 + cardw, spaceh * 2 + cardh, cardw, cardh);
-			drawString(g2, "Monnaie faible", spacew + cardw / 2, spaceh, 0, -1);
-			drawString(g2, "1", spacew + cardw / 2, spaceh + cardh / 2, 0, 0);
-			drawString(g2, "Monnaie moyenne", spacew * 2 + 3 * cardw / 2, spaceh, 0, -1);
-			drawString(g2, "2", spacew * 2 + 3 * cardw / 2, spaceh + cardh / 2, 0, 0);
-			drawString(g2, "Monnaie forte", spacew * 3 + 5 * cardw / 2, spaceh, 0, -1);
-			drawString(g2, "4", spacew * 3 + 5 * cardw / 2, spaceh + cardh / 2, 0, 0);
-			drawString(g2, "Monnaie en attente", spacew * 2 + 3 * cardw / 2, spaceh * 2 + cardh, 0, -1);
-			drawString(g2, "0", spacew * 2 + 3 * cardw / 2, spaceh * 2 + 3 * cardh / 2, 0, 0);
+			drawString(g2, UIMessages.getString("General.Cards.Weak"), spacew + cardw / 2, spaceh, 0, -1); //$NON-NLS-1$
+			drawString(g2, UIMessages.getString("Frame.ValuesHelper.WeakCardValue.Label"), spacew + cardw / 2, spaceh + cardh / 2, 0, 0); //$NON-NLS-1$
+			drawString(g2, UIMessages.getString("General.Cards.Medium"), spacew * 2 + 3 * cardw / 2, spaceh, 0, -1); //$NON-NLS-1$
+			drawString(g2, UIMessages.getString("Frame.ValuesHelper.MediumCardValue.Label"), spacew * 2 + 3 * cardw / 2, spaceh + cardh / 2, 0, 0); //$NON-NLS-1$
+			drawString(g2, UIMessages.getString("General.Cards.Strong"), spacew * 3 + 5 * cardw / 2, spaceh, 0, -1); //$NON-NLS-1$
+			drawString(g2, UIMessages.getString("Frame.ValuesHelper.StrongCardValue.Label"), spacew * 3 + 5 * cardw / 2, spaceh + cardh / 2, 0, 0); //$NON-NLS-1$
+			drawString(g2, UIMessages.getString("Frame.ValuesHelper.WaitingMoney.Label"), spacew * 2 + 3 * cardw / 2, spaceh * 2 + cardh, 0, -1); //$NON-NLS-1$
+			drawString(g2, UIMessages.getString("Frame.ValuesHelper.WaitingCardValue.Label"), spacew * 2 + 3 * cardw / 2, spaceh * 2 + 3 * cardh / 2, 0, 0); //$NON-NLS-1$
 			AffineTransform oldTransform = g2.getTransform();
 			AffineTransform turn = new AffineTransform();
 			turn.rotate(Math.PI);
@@ -237,7 +238,7 @@ public class ValuesHelper extends JFrame
 
 	public ValuesHelper(HelperUI pHelperUI, int pMoneySystem)
 	{
-		super("Aide valeurs");
+		super(UIMessages.getString("Frame.ValuesHelper.Frame.Title")); //$NON-NLS-1$
 		mHelperUI = pHelperUI;
 		addWindowListener(new WindowAdapter()
 		{

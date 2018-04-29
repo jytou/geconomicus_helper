@@ -12,9 +12,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowFocusListener;
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
@@ -50,9 +50,21 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 
+/**
+ * The first dialog that the user sees: he can choose to open an existing game, choose to import a game from a file or create a new game.<br>
+ * It then opens the relevant window: the main window or the statistics game chooser.
+ * @author jytou
+ */
 public class ChooseGameDialog extends JFrame
 {
+	private static final String OPEN_GAME_ACTION = "openGame"; //$NON-NLS-1$
+	private static final String NEW_GAME_ACTION = "newGame"; //$NON-NLS-1$
+	private static final String CANCEL_ACTION = "cancel"; //$NON-NLS-1$
+
+	// This boolean is set to true if the dialog wasn't cancelled
 	private boolean mChosen = false;
+
+	// The money system
 	private JComboBox<Integer> mMoneySystemCB;
 	private JTextField mDateTextField;
 	private JTextField mLocationTextField;
@@ -65,9 +77,9 @@ public class ChooseGameDialog extends JFrame
 
 	public ChooseGameDialog(final EntityManager pEntityManager, final EntityManagerFactory pEntityManagerFactory) throws IOException
 	{
-		super("Choisir une partie");
+		super(UIMessages.getString("ChooseGameDialog.Title")); //$NON-NLS-1$
 		// Global stuff on the dialog
-		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus.png")));
+		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus.png"))); //$NON-NLS-1$
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
@@ -79,6 +91,7 @@ public class ChooseGameDialog extends JFrame
 					System.exit(1);
 			}
 		});
+
 		final Dimension size = new Dimension(800, 600);
 		setSize(size);
 		final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -90,12 +103,12 @@ public class ChooseGameDialog extends JFrame
 		 * Actions on existing games (open, delete)
 		 */
 		final JPanel existingGamesPanel = new JPanel(new GridBagLayout());
-		existingGamesPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), "Parties existantes"));
+		existingGamesPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), UIMessages.getString("ChooseGameDialog.ExistingGames.Panel.Title"))); //$NON-NLS-1$
 		final Insets insets = new Insets(2, 2, 2, 2);
-		final JLabel openGameLabel = new JLabel("Partie à ouvrir");
+		final JLabel openGameLabel = new JLabel(UIMessages.getString("ChooseGameDialog.GameToOpen.Label")); //$NON-NLS-1$
 		existingGamesPanel.add(openGameLabel, new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, insets, 0, 0));
 		@SuppressWarnings("unchecked")
-		final List<Game> games = pEntityManager.createNamedQuery("Game.findAll").getResultList();
+		final List<Game> games = pEntityManager.createNamedQuery("Game.findAll").getResultList(); //$NON-NLS-1$
 		games.add(0, null);
 		games.sort(new Comparator<Game>()
 		{
@@ -119,7 +132,7 @@ public class ChooseGameDialog extends JFrame
 		final JPanel existingGamesButtonPanel = new JPanel(new GridBagLayout());
 		existingGamesButtonPanel.add(new JPanel(), new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, insets, 0, 0));
 
-		final JButton iWantStatistics = new JButton("Je veux juste les statistiques !");
+		final JButton iWantStatistics = new JButton(UIMessages.getString("ChooseGameDialog.OpenStatisticsOnly.Button")); //$NON-NLS-1$
 		iWantStatistics.addActionListener(new ActionListener()
 		{
 			@Override
@@ -138,7 +151,7 @@ public class ChooseGameDialog extends JFrame
 			}
 		});
 		existingGamesButtonPanel.add(iWantStatistics, new GridBagConstraints(1, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, insets, 0, 0));
-		final JButton openGameButton = new JButton("Ouvrir cette partie");
+		final JButton openGameButton = new JButton(UIMessages.getString("ChooseGameDialog.OpenThisGame.Button")); //$NON-NLS-1$
 		existingGamesButtonPanel.add(openGameButton, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, insets, 0, 0));
 		final Action openGameAction = new AbstractAction()
 		{
@@ -151,7 +164,7 @@ public class ChooseGameDialog extends JFrame
 				}
 				catch (IOException e)
 				{
-					JOptionPane.showMessageDialog(ChooseGameDialog.this, "Could not open main frame because of exception " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(ChooseGameDialog.this, MessageFormat.format(UIMessages.getString("ChooseGameDialog.CouldNotOpenMainFrame.Error.Message"), e.getMessage()), UIMessageKeyProvider.DIALOG_TITLE_ERROR.getMessage(), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 					return;
 				}
 				mChosen = true;
@@ -160,16 +173,16 @@ public class ChooseGameDialog extends JFrame
 		};
 		openGameButton.setEnabled(false);
 		openGameButton.addActionListener(openGameAction);
-		openGameButton.setMnemonic('O');
-		openGameButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK), "openGame");
-		openGameButton.getActionMap().put("openGame", openGameAction);
-		final JButton deleteGameButton = new JButton("Supprimer cette partie");
+		openGameButton.setMnemonic(UIMessages.getString("ChooseGameDialog.OpenButton.Mnemonic").charAt(0)); //$NON-NLS-1$
+		openGameButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK), ChooseGameDialog.OPEN_GAME_ACTION);
+		openGameButton.getActionMap().put(ChooseGameDialog.OPEN_GAME_ACTION, openGameAction);
+		final JButton deleteGameButton = new JButton(UIMessages.getString("ChooseGameDialog.DeleteThisGame.Button")); //$NON-NLS-1$
 		deleteGameButton.addActionListener(new ActionListener()
 		{
 			@Override
 			public void actionPerformed(ActionEvent pE)
 			{
-				if (JOptionPane.showConfirmDialog(ChooseGameDialog.this, "Voulez-vous vraiment supprimer cette partie ?", "Suppression de partie", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION)
+				if (JOptionPane.showConfirmDialog(ChooseGameDialog.this, UIMessages.getString("ChooseGameDialog.DeleteGame.Confirm.Label"), UIMessages.getString("ChooseGameDialog.DeleteGame.Confirm.Title"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) //$NON-NLS-1$ //$NON-NLS-2$
 				{
 					pEntityManager.getTransaction().begin();
 					final Game game = (Game)gameCombo.getSelectedItem();
@@ -197,16 +210,16 @@ public class ChooseGameDialog extends JFrame
 		 * Importing a game from an XML file
 		 */
 		final JPanel importGamesPanel = new JPanel(new GridBagLayout());
-		importGamesPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), "Importer une partie"));
-		final JLabel importXmlFileLabel = new JLabel("Importer depuis un fichier XML");
+		importGamesPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), UIMessages.getString("ChooseGameDialog.ImportGame.Panel.Title"))); //$NON-NLS-1$
+		final JLabel importXmlFileLabel = new JLabel(UIMessages.getString("ChooseGameDialog.ImportGame.FromXML.Label")); //$NON-NLS-1$
 		importGamesPanel.add(importXmlFileLabel, new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, insets, 0, 0));
 		final JTextField xmlFileTF = new JTextField();
 		importGamesPanel.add(xmlFileTF, new GridBagConstraints(1, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		final JButton chooseXmlFileButton = new JButton("Ouvrir...");
+		final JButton chooseXmlFileButton = new JButton(UIMessageKeyProvider.DIALOG_BUTTON_OPEN.getMessage());
 		importGamesPanel.add(chooseXmlFileButton, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, insets, 0, 0));
 		final JPanel importGameButtonPanel = new JPanel(new GridBagLayout());
 		importGameButtonPanel.add(new JPanel(), new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		final JButton importGameButton = new JButton("Importer !");
+		final JButton importGameButton = new JButton(UIMessageKeyProvider.DIALOG_BUTTON_IMPORT.getMessage());
 		final Action importGameAction = new AbstractAction()
 		{
 			@Override
@@ -223,43 +236,45 @@ public class ChooseGameDialog extends JFrame
 				}
 				catch (PropertyException e)
 				{
-					JOptionPane.showMessageDialog(rootPane, "Erreur durant l'import : " + e.getClass().getName() + " (" + e.getMessage() + ")", "Erreur", JOptionPane.ERROR_MESSAGE);
+					UIUtil.showExceptionMessage(ChooseGameDialog.this, e);
 					return;
 				}
 				catch (JAXBException e)
 				{
-					JOptionPane.showMessageDialog(rootPane, "Erreur durant l'import : " + e.getClass().getName() + " (" + e.getMessage() + ")", "Erreur", JOptionPane.ERROR_MESSAGE);
+					UIUtil.showExceptionMessage(ChooseGameDialog.this, e);
 					return;
 				}
 				if (importedGame != null)
 				{
+					// The game was imported successfully, persist it in the database
 					pEntityManager.getTransaction().begin();
 					try
 					{
 						importedGame.recomputeAll(null);
 						pEntityManager.persist(importedGame);
 						pEntityManager.getTransaction().commit();
+						// Open the main window with this new game
 						new HelperUI(pEntityManager, pEntityManagerFactory, importedGame);
 						setVisible(false);
 					}
 					catch (Throwable e)
 					{
 						pEntityManager.getTransaction().rollback();
-						JOptionPane.showMessageDialog(ChooseGameDialog.this, "Une erreur est survenue : " + e.getClass().getName() + "(" + e.getMessage() + ")", "", JOptionPane.ERROR_MESSAGE);
+						UIUtil.showExceptionMessage(ChooseGameDialog.this, e);
 					}
 				}
 			}
 		};
 		importGameButton.setEnabled(false);
 		importGameButton.addActionListener(importGameAction);
-		importGameButton.setMnemonic('i');
+		importGameButton.setMnemonic(UIMessages.getString("ChooseGameDialog.ImportGame.Mnemonic").charAt(0)); //$NON-NLS-1$
 		chooseXmlFileButton.addActionListener(new ActionListener()
 		{
 			@Override
 			public void actionPerformed(ActionEvent pEvent)
 			{
 				final JFileChooser fc = new JFileChooser();
-				fc.setFileFilter(new FileNameExtensionFilter("xml", "xml"));
+				fc.setFileFilter(new FileNameExtensionFilter("xml", "xml")); //$NON-NLS-1$ //$NON-NLS-2$
 				if (fc.showOpenDialog(ChooseGameDialog.this) == JFileChooser.APPROVE_OPTION)
 				{
 					xmlFileTF.setText(fc.getSelectedFile().getAbsolutePath());
@@ -297,52 +312,54 @@ public class ChooseGameDialog extends JFrame
 		 * Creating a new game
 		 */
 		final JPanel newGamePanel = new JPanel(new GridBagLayout());
-		newGamePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), "Nouvelle partie"));
+		newGamePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED), UIMessages.getString("ChooseGameDialog.NewGame.Panel.Title"))); //$NON-NLS-1$
 		int y = 0;
-		newGamePanel.add(new JLabel("Date"), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
-		mDateTextField = new JTextField(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z").format(new Date()));
+		newGamePanel.add(new JLabel(UIMessageKeyProvider.GAME_DATE_LABEL.getMessage()), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
+		mDateTextField = new JTextField(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z").format(new Date())); //$NON-NLS-1$
 		newGamePanel.add(mDateTextField, new GridBagConstraints(1, y++, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		newGamePanel.add(new JLabel("Type de monnaie"), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
+		newGamePanel.add(new JLabel(UIMessages.getString("ChooseGameDialog.NewGame.MoneyType.Label")), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0)); //$NON-NLS-1$
 		mMoneySystemCB = new JComboBox<>(new Integer[] {-1, 0, 1});
 		mMoneySystemCB.setRenderer(new ListCellRenderer<Integer>()
 		{
 			@Override
 			public Component getListCellRendererComponent(JList<? extends Integer> pList, Integer pValue, int pIndex, boolean pIsSelected, boolean pCellHasFocus)
 			{
-				String text = "";
+				String text = ""; //$NON-NLS-1$
 				switch (pValue.intValue())
 				{
 				case -1:// this is empty
 					break;
 				case Game.MONEY_DEBT:
-					text = "Monnaie-dette";
+					text = UIMessageKeyProvider.GENERAL_DEBT_MONEY.getMessage();
 					break;
 				case Game.MONEY_LIBRE:
-					text = "Monnaie libre";
+					text = UIMessageKeyProvider.GENERAL_LIBRE_CURRENCY.getMessage();
 					break;
 				default:
-					System.err.println("Unknown value for money type in combobox");
+					// This shouldn't happen
+					System.err.println("Unknown value for money type in combobox"); //$NON-NLS-1$
 				}
 				return new JLabel(text);
 			}
 		});
+		mMoneySystemCB.requestFocusInWindow();
 		newGamePanel.add(mMoneySystemCB, new GridBagConstraints(1, y++, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		newGamePanel.add(new JLabel("Lieu"), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
+		newGamePanel.add(new JLabel(UIMessages.getString("ChooseGameDialog.NewGame.Location.Label")), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0)); //$NON-NLS-1$
 		mLocationTextField = new JTextField();
 		newGamePanel.add(mLocationTextField, new GridBagConstraints(1, y++, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		newGamePanel.add(new JLabel("Animateur"), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
+		newGamePanel.add(new JLabel(UIMessages.getString("ChooseGameDialog.NewGame.AnimatorPseudo.Label")), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0)); //$NON-NLS-1$
 		mAnimatorTextField = new JTextField();
 		newGamePanel.add(mAnimatorTextField, new GridBagConstraints(1, y++, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		newGamePanel.add(new JLabel("Courriel"), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
+		newGamePanel.add(new JLabel(UIMessages.getString("ChooseGameDialog.NewGame.AnimatorEmail.Label")), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0)); //$NON-NLS-1$
 		mEmailTextField = new JTextField();
 		newGamePanel.add(mEmailTextField, new GridBagConstraints(1, y++, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		newGamePanel.add(new JLabel("Nb tours"), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
-		mNbTurnsTextField = new JTextField("");
+		newGamePanel.add(new JLabel(UIMessages.getString("ChooseGameDialog.NewGame.NbTurns.Label")), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0)); //$NON-NLS-1$
+		mNbTurnsTextField = new JTextField(""); //$NON-NLS-1$
 		newGamePanel.add(mNbTurnsTextField, new GridBagConstraints(1, y++, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		newGamePanel.add(new JLabel("Facteur carte/monnaie"), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
-		mMoneyCardsFactorTextField = new JTextField("");
+		newGamePanel.add(new JLabel(UIMessages.getString("ChooseGameDialog.NewGame.CardMoneyFactor.Label")), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0)); //$NON-NLS-1$
+		mMoneyCardsFactorTextField = new JTextField(""); //$NON-NLS-1$
 		newGamePanel.add(mMoneyCardsFactorTextField, new GridBagConstraints(1, y++, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		newGamePanel.add(new JLabel("Commentaires"), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
+		newGamePanel.add(new JLabel(UIMessageKeyProvider.GAME_DESCRIPTION_LABEL.getMessage()), new GridBagConstraints(0, y, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
 		final JTextArea descriptionTextArea = new JTextArea();
 		final JScrollPane descriptionScrollPane = new JScrollPane(descriptionTextArea);
 		newGamePanel.add(descriptionScrollPane, new GridBagConstraints(1, y++, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, insets, 0, 0));
@@ -351,7 +368,7 @@ public class ChooseGameDialog extends JFrame
 		mErrorGameButtonPanel = new JLabel();
 		mErrorGameButtonPanel.setForeground(Color.red);
 		newGameButtonPanel.add(mErrorGameButtonPanel, new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		mNewGameButton = new JButton("Nouvelle partie");
+		mNewGameButton = new JButton(UIMessages.getString("ChooseGameDialog.NewGame.Button")); //$NON-NLS-1$
 		newGameButtonPanel.add(mNewGameButton, new GridBagConstraints(1, 0, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
 
 		mNewGameButton.setEnabled(false);
@@ -372,21 +389,21 @@ public class ChooseGameDialog extends JFrame
 				catch (NumberFormatException e)
 				{
 					em.getTransaction().rollback();
-					JOptionPane.showMessageDialog(ChooseGameDialog.this, "Some field should be a number and isn't", "Error", JOptionPane.ERROR_MESSAGE);;
+					JOptionPane.showMessageDialog(ChooseGameDialog.this, UIMessages.getString("ChooseGameDialog.ShouldBeANumber.Error.Message"), UIMessageKeyProvider.DIALOG_TITLE_ERROR.getMessage(), JOptionPane.ERROR_MESSAGE);; //$NON-NLS-1$
 					return;
 				}
 				catch (IOException e)
 				{
 					em.getTransaction().rollback();
-					JOptionPane.showMessageDialog(ChooseGameDialog.this, "Could not open main frame because of exception " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(ChooseGameDialog.this, MessageFormat.format(UIMessages.getString("ChooseGameDialog.CouldNotOpenMainFrame.Error.Message"), e.getMessage()), UIMessageKeyProvider.DIALOG_TITLE_ERROR.getMessage(), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 					return;
 				}
 				setVisible(false);
 			}
 		};
-		mNewGameButton.setMnemonic('N');
-		mNewGameButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK), "newGame");
-		mNewGameButton.getActionMap().put("newGame", newGameAction);
+		mNewGameButton.setMnemonic(UIMessages.getString("ChooseGameDialog.NewGame.Button.Mnemonic").charAt(0)); //$NON-NLS-1$
+		mNewGameButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK), ChooseGameDialog.NEW_GAME_ACTION);
+		mNewGameButton.getActionMap().put(ChooseGameDialog.NEW_GAME_ACTION, newGameAction);
 		mNewGameButton.addActionListener(newGameAction);
 		newGamePanel.add(newGameButtonPanel, new GridBagConstraints(0, y++, 2, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, insets, 0, 0));
 		mainPanel.add(newGamePanel, new GridBagConstraints(0, 10, 2, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, insets, 5, 5));
@@ -396,12 +413,12 @@ public class ChooseGameDialog extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent pEvent)
 			{
-				if (JOptionPane.showConfirmDialog(ChooseGameDialog.this, "Voulez-vous vraiment quitter ?", "Quitter ?", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+				if (JOptionPane.showConfirmDialog(ChooseGameDialog.this, UIMessages.getString("ChooseGameDialog.ReallyExit.Message"), UIMessages.getString("ChooseGameDialog.ReallyExit.Title"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) //$NON-NLS-1$ //$NON-NLS-2$
 					System.exit(1);
 			}
 		};
-		mainPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
-		mainPanel.getActionMap().put("cancel", cancelAction);
+		mainPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), ChooseGameDialog.CANCEL_ACTION);
+		mainPanel.getActionMap().put(ChooseGameDialog.CANCEL_ACTION, cancelAction);
 
 		mMoneySystemCB.addActionListener(new ActionListener()
 		{
@@ -438,43 +455,31 @@ public class ChooseGameDialog extends JFrame
 		mNbTurnsTextField.getDocument().addDocumentListener(buttonActivator);
 		mMoneyCardsFactorTextField.getDocument().addDocumentListener(buttonActivator);
 
-		addWindowFocusListener(new WindowFocusListener()
-		{
-			@Override
-			public void windowLostFocus(WindowEvent pE)
-			{
-			}
-			
-			@Override
-			public void windowGainedFocus(WindowEvent pE)
-			{
-				mMoneySystemCB.requestFocus();
-			}
-		});
 		getContentPane().add(mainPanel);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 	}
 
 	/**
 	 * Activates the new game button and makes sure that the different fields have been correctly filled beforehand.
+	 * Shows a revelant error depending on the fields that have been incorrectly filled.
 	 */
 	private void activateNewGameButton()
 	{
 		String error = null;
 		if (mMoneySystemCB.getSelectedIndex() == 0)
-			error = "Sélectionner le système monétaire de la partie.";
+			error = UIMessages.getString("ChooseGameDialog.ChooseMonetarySystem.ErrorHint"); //$NON-NLS-1$
 		else if (mDateTextField.getText().isEmpty())
-			error = "La date ne peut être vide.";
+			error = UIMessages.getString("ChooseGameDialog.DateCannotBeEmpty.ErrorHint"); //$NON-NLS-1$
 		else if (mLocationTextField.getText().isEmpty())
-			error = "Le lieu ne peut être vide.";
+			error = UIMessages.getString("ChooseGameDialog.LocationCannotBeEmpty.ErrorHint"); //$NON-NLS-1$
 		else if (mAnimatorTextField.getText().isEmpty())
-			error = "Saisir un animateur pour la partie.";
-		else if (!mEmailTextField.getText().contains("@"))
-			error = "L'adresse de courriel doit contenir un arobase.";
+			error = UIMessages.getString("ChooseGameDialog.ChooseAnimator.ErrorHint"); //$NON-NLS-1$
+		else if (!mEmailTextField.getText().contains("@")) //$NON-NLS-1$
+			error = UIMessages.getString("ChooseGameDialog.EmailMustHaveAt.ErrorHint"); //$NON-NLS-1$
 		else if (mNbTurnsTextField.getText().isEmpty())
-			error = "Le nombre de tours ne peut pas être vide.";
+			error = UIMessages.getString("ChooseGameDialog.NbTurnsMustBeFilled.ErrorHint"); //$NON-NLS-1$
 		else if (mMoneyCardsFactorTextField.getText().isEmpty())
-			error = "Le facteur de la monnaie par rapport aux cartes ne doit pas être vide.";
+			error = UIMessages.getString("ChooseGameDialog.FactorMustBeFilled.ErrorHint"); //$NON-NLS-1$
 		if (error == null)
 		{
 			try
@@ -483,7 +488,7 @@ public class ChooseGameDialog extends JFrame
 			}
 			catch (NumberFormatException e)
 			{
-				error = "Le nombre de tours doit être un nombre.";
+				error = UIMessages.getString("ChooseGameDialog.NbTurnsMustBeInt.ErrorHint"); //$NON-NLS-1$
 			}
 			try
 			{
@@ -491,15 +496,15 @@ public class ChooseGameDialog extends JFrame
 			}
 			catch (NumberFormatException e)
 			{
-				error = "Le facteur de la monnaie par rapport aux cartes doit être un nombre.";
+				error = UIMessages.getString("ChooseGameDialog.MoneyFactorMustBeInt.ErrorHint"); //$NON-NLS-1$
 			}
 			try
 			{
-				new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z").parse(mDateTextField.getText());
+				new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z").parse(mDateTextField.getText()); //$NON-NLS-1$
 			}
 			catch (ParseException e)
 			{
-				error = "Saisir une date de type « 2018.04.15 20:39:39 CEST ».";
+				error = UIMessages.getString("ChooseGameDialog.IncorrectDateFormat.ErrorHint"); //$NON-NLS-1$
 			}
 		}
 		mNewGameButton.setEnabled(error == null);
@@ -509,7 +514,7 @@ public class ChooseGameDialog extends JFrame
 	public String createLabelForGame(Game pGame)
 	{
 		if (pGame == null)
-			return "";
-		return pGame.getCurdate() + " / " + (pGame.getMoneySystem() == Game.MONEY_DEBT ? "Monnaie Dette" : "Monnaie Libre") + " / " + pGame.getLocation() + " - " + pGame.getAnimatorPseudo();
+			return ""; //$NON-NLS-1$
+		return MessageFormat.format(UIMessages.getString("ChooseGameDialog.GameCombo.LabelForGame"), new Object[] {pGame.getCurdate(), pGame.getMoneySystem() == Game.MONEY_DEBT ? UIMessageKeyProvider.GENERAL_DEBT_MONEY.getMessage() : UIMessageKeyProvider.GENERAL_LIBRE_CURRENCY.getMessage(), pGame.getLocation(), pGame.getAnimatorPseudo()}); //$NON-NLS-1$
 	}
 }

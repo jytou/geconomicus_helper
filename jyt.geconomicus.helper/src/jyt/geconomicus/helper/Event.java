@@ -23,21 +23,36 @@ public class Event implements Serializable
 	// Use event types with different starting characters for persistence
 	public enum EventType
 	{
-		JOIN("Nouveau joueur"),
-		TURN("Nouveau tour"),
-		NEW_CREDIT("Nouveau crédit"),
-		INTEREST_ONLY("Remboursement des intérêts seuls"),
-		REIMB_CREDIT("Remboursement de crédit"),
-		CANNOT_PAY("Défaut de paiement : saisie de cartes"),
-		BANKRUPT("Faillite personnelle : ne reste pas assez de cartes"),
-		PRISON("Prison : pas assez de valeurs à saisir"),
-		QUIT("Départ d'un joueur"),
-		MM_CHANGE("Changement inattendu de masse monétaire"),
-		END("Fin de partie"),
-		DEATH("Mort/renaissance"),
-		XTECHNOLOGICAL_BREAKTHROUGH("Rupture technologique"),
-		SIDE_INVESTMENT("Investissement de banque"),
-		ASSESSMENT_FINAL("Décompte final des avoirs de la banque");
+		// A player joins the game
+		JOIN(Messages.getString("BaseMessage.Event.NewPlayer")), //$NON-NLS-1$
+		// A turn just finished - initiate a new turn
+		TURN(Messages.getString("BaseMessage.Event.NewTurn")), //$NON-NLS-1$
+		// A player takes a new credit
+		NEW_CREDIT(Messages.getString("BaseMessage.Event.NewCredit")), //$NON-NLS-1$
+		// A player pays back only the interest
+		INTEREST_ONLY(Messages.getString("BaseMessage.Event.ReimburseInterestOnly")), //$NON-NLS-1$
+		// A player reimbursed his credit (partially or in full)
+		REIMB_CREDIT(Messages.getString("BaseMessage.Event.ReimburseCredit")), //$NON-NLS-1$
+		// A player is defaulting on his debt but can still play after having been seized
+		CANNOT_PAY(Messages.getString("BaseMessage.Event.DefaultOk")), //$NON-NLS-1$
+		// A player cannot pay and doesn't have enough cards to continue playing: he skis a turn
+		BANKRUPT(Messages.getString("BaseMessage.Event.DefaultBankrupt")), //$NON-NLS-1$
+		// A player doesn't have enough cards to cover his default: he goes to prison
+		PRISON(Messages.getString("BaseMessage.Event.DefaultPrison")), //$NON-NLS-1$
+		// A player quits the game (can be used in the middle of the game but also used to do the assessment at the end of the game)
+		QUIT(Messages.getString("BaseMessage.Event.QuitGame")), //$NON-NLS-1$
+		// The money mass changes unexpectedly (should mostly not happen at all - only for very exceptional cases)
+		MM_CHANGE(Messages.getString("BaseMessage.Event.MoneyMassChange")), //$NON-NLS-1$
+		// End of the game
+		END(Messages.getString("BaseMessage.Event.EndGame")), //$NON-NLS-1$
+		// A player dies - assessment of his possessions
+		DEATH(Messages.getString("BaseMessage.Event.DeathRebirth")), //$NON-NLS-1$
+		// A technological breakthrough. Note that this event MUST have a player attached to it: the player that caused the breakthrough
+		XTECHNOLOGICAL_BREAKTHROUGH(Messages.getString("BaseMessage.Event.TechnologicalBreakthrough")), //$NON-NLS-1$
+		// The bank invests money and/or cards
+		SIDE_INVESTMENT(Messages.getString("BaseMessage.Event.BankInvestment")), //$NON-NLS-1$
+		// Final assessment of the investments of the bank at the end of the game
+		ASSESSMENT_FINAL(Messages.getString("BaseMessage.Event.BankAssessment")); //$NON-NLS-1$
 
 		private String description;
 		EventType(String pDescription)
@@ -51,6 +66,7 @@ public class Event implements Serializable
 		}
 	}; 
 
+	// IDs are generated automatically by EclipseLink.
 	@TableGenerator(
 		name="evtGen",
 		table="ID_GEN",
@@ -61,37 +77,57 @@ public class Event implements Serializable
 	)
 	@XmlTransient
 	@GeneratedValue(strategy=GenerationType.TABLE, generator="evtGen")
-	//@GeneratedValue(strategy=GenerationType.AUTO)
 	@Id
 	private Integer id;
+
+	// The timestamp for this event
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date tstamp;
+
+	// The event type - translated into a String in the dabatase
 	@Column
 	@Convert(converter = EventTypeConverter.class)
 	private EventType evt;
-//	@XmlInverseReference(mappedBy="events")
+
+	// The game in which this event occurred
 	@XmlIDREF
 	@ManyToOne
 	@JoinColumn(nullable=false)
 	private Game game;
+
+	// The player that triggered this event. It may be null if it is a game event.
 	@XmlIDREF
 	@JoinColumn(nullable=true)
 	private Player player;
+
+	// The two next are only for the debt-money system
+	// The interest due/reimbursed by the player during this event
 	private int interest = 0;
+	// The principal of the credit due/reimbursed by the player during this event
 	private int principal = 0;
+
+	// The three next are only for the Free Currency system: the coins that are left when a player dies/quits the game
 	private int weakCoins = 0;
 	private int mediumCoins = 0;
 	private int strongCoins = 0;
+	// The cards that a player has left in his hands, or that are seized by the banker during a default.
 	private int weakCards = 0;
 	private int mediumCards = 0;
 	private int strongCards = 0;
 
+	// Used by EclipseLink to instantiate empty objects.
 	@SuppressWarnings("unused")
 	private Event()
 	{
 		super();
 	}
 
+	/**
+	 * Creates a new event for this game
+	 * @param pGame
+	 * @param pEventType
+	 * @param pPlayer can be <code>null</code> if the event is a global event (new turn, etc.)
+	 */
 	public Event(Game pGame, EventType pEventType, Player pPlayer)
 	{
 		super();
@@ -184,6 +220,11 @@ public class Event implements Serializable
 		return player;
 	}
 
+	/**
+	 * Applies this event to the current game.<br>
+	 * It adds seized values or interest gained, increments or decrements the money owed by a player,
+	 * adjusts the current money mass, etc.
+	 */
 	public void applyEvent()
 	{
 		switch (evt)
@@ -192,11 +233,15 @@ public class Event implements Serializable
 		case PRISON:
 		case CANNOT_PAY:
 		case REIMB_CREDIT:
+			// Money and/or cards get taken from a player
 			game.seizeValues(weakCards, mediumCards, strongCards);
 			game.gainInterest(interest);
-			// and then it's just like quitting
+			// and then it's just like quitting: don't break here!
+
 		case QUIT:
 		case DEATH:
+			// A player has finished playing - do an inventory of what he has left
+			// take that into account in the total money mass
 			game.changeMoneyMass(-interest-principal-(weakCoins + 2 * mediumCoins + 4 * strongCoins) * game.getMoneyCardsFactor());
 			if (EventType.REIMB_CREDIT.equals(evt))
 			{
@@ -215,6 +260,7 @@ public class Event implements Serializable
 				game.changeMoneyMass(8 * game.getMoneyCardsFactor());
 			break;
 		case INTEREST_ONLY:
+			// The bank is grabbing some interest only
 			game.gainInterest(interest);
 			game.changeMoneyMass(-interest);
 			player.setVisitedBank(true);
@@ -235,12 +281,15 @@ public class Event implements Serializable
 				game.changeMoneyMass(7 * game.getMoneyCardsFactor());
 			break;
 		case TURN:
+			// All players that have debt need to go to the bank
 			for (Player player : game.getPlayers())
 				if (player.getCurDebt() > 0)
 					player.setVisitedBank(false);
 			game.incTurnNumber();
 			if (game.getMoneySystem() == Game.MONEY_LIBRE)
-			// the money mass is going towards the average
+			// The money mass is going towards the average
+			// Note that we don't have the actual data of how much money each player is giving away
+			// We can deal with an average here.
 			{
 				int nbPlayers = 0;
 				for (Player player : game.getPlayers())
@@ -256,16 +305,20 @@ public class Event implements Serializable
 			// Nothing to do here
 			break;
 		case SIDE_INVESTMENT:
+			// The bank invests some money and cards
 			game.investMoney(interest);
 			game.investCards(weakCards + 2 * mediumCards + 4 * strongCards);
 			break;
 		case ASSESSMENT_FINAL:
+			// The final assessment from the bank
 			game.gainInterest(interest);
 			game.seizeValues(weakCards, mediumCards, strongCards);
 			break;
 		default:
-			throw new RuntimeException("Unexpected event " + evt.description);
+			// This should not happen
+			throw new RuntimeException("Unexpected event " + evt.description); //$NON-NLS-1$
 		}
+		// This is a special case that cannot go into the switch
 		if (EventType.QUIT.equals(evt))
 			player.setActive(false);
 	}
@@ -273,32 +326,37 @@ public class Event implements Serializable
 	@Override
 	public String toString()
 	{
-		return "#" + getId() + " - " + getTstamp().toString() + " - player " + (getPlayer() == null ? "" : " - player " + getPlayer().getName()) + " - " + getEvt().getDescription() + " - " + details();
+		// To be used only in the CLI version
+		return "#" + getId() + " - " + getTstamp().toString() + " - player " + (getPlayer() == null ? "" : " - player " + getPlayer().getName()) + " - " + getEvt().getDescription() + " - " + details();  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 	}
 
+	/**
+	 * This method should only be used in the CLI version.
+	 * @return
+	 */
 	public String details()
 	{
 		final StringBuilder sb = new StringBuilder();
 		if (principal > 0)
-			sb.append("principal: ").append(principal);
+			sb.append("principal: ").append(principal); //$NON-NLS-1$
 
 		if (interest > 0)
 		{
 			if (sb.length() > 0)
-				sb.append(" - ");
-			sb.append("interest: ").append(interest);
+				sb.append(" - "); //$NON-NLS-1$
+			sb.append("interest: ").append(interest); //$NON-NLS-1$
 		}
 		if (weakCoins + mediumCoins + strongCoins > 0)
 		{
 			if (sb.length() > 0)
-				sb.append(" - ");
-			sb.append("had: ").append(weakCoins).append(", ").append(mediumCoins).append(", ").append(strongCoins).append(" (total: ").append(weakCoins + mediumCoins * 2 + strongCoins * 4).append(")");
+				sb.append(" - "); //$NON-NLS-1$
+			sb.append("had: ").append(weakCoins).append(", ").append(mediumCoins).append(", ").append(strongCoins).append(" (total: ").append(weakCoins + mediumCoins * 2 + strongCoins * 4).append(")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 		}
 		if (weakCards + mediumCards + strongCards > 0)
 		{
 			if (sb.length() > 0)
-				sb.append(" - ");
-			sb.append("seized: ").append(weakCards).append(", ").append(mediumCards).append(", ").append(strongCards).append(" (total: ").append(weakCards + mediumCards * 2 + strongCards * 4).append(")");
+				sb.append(" - "); //$NON-NLS-1$
+			sb.append("seized: ").append(weakCards).append(", ").append(mediumCards).append(", ").append(strongCards).append(" (total: ").append(weakCards + mediumCards * 2 + strongCards * 4).append(")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 		}
 		return sb.toString();
 	}
@@ -339,6 +397,12 @@ public class Event implements Serializable
 		tstamp = pTstamp;
 	}
 
+	/**
+	 * Clones an event into another game. Useful for importing events into a game.
+	 * @param pGame
+	 * @return the cloned event for pGame
+	 * @throws PlayerNotFoundException if no player with the same name is found
+	 */
 	public Event cloneFor(Game pGame) throws PlayerNotFoundException
 	{
 		Player otherPlayer = null;

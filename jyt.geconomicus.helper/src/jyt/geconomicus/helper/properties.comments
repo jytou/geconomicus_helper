@@ -1,0 +1,7 @@
+#Modified by java-properties-editor.com (sorting:human), 
+
+BaseMessage.Event.BankAssessment=Used once at the end of the game when the bank has been investing
+BaseMessage.Event.DefaultBankrupt=The player is inactive for one turn.
+BaseMessage.Event.DefaultPrison=The player goes to prison
+BaseMessage.Event.MoneyMassChange=To be used only under exceptional circumstances
+BaseMessage.Event.QuitGame=Can happen during a game or at the end of the game

@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,9 +26,17 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
 import jyt.geconomicus.helper.Event.EventType;
+import jyt.geconomicus.helper.HelperUI.ActionCommand;
 
+/**
+ * A multi-purpose dialog to gather information on the assets of a player - money or cards.
+ * @author jytou
+ */
 public class CreditActionDialog extends JDialog
 {
+	private static final String ESCAPE_ACTION = "escape"; //$NON-NLS-1$
+	private static final String ENTER_ACTION = "enter"; //$NON-NLS-1$
+
 	private class CancelAction extends AbstractAction implements ActionListener
 	{
 		@Override
@@ -37,7 +46,18 @@ public class CreditActionDialog extends JDialog
 		}
 	}
 
-	public enum Purpose { MONEY_MASS_CHANGE, BANK_INVESTMENT, NEW_OR_REIMB_CREDIT, DEFAULT, PLAYER_ASSESSMENT_DEBT_MONEY, PLAYER_ASSESSMENT_LIBRE_MONEY };
+	// The different purposes that this dialog can serve
+	public enum Purpose
+	{
+		MONEY_MASS_CHANGE,            // money mass change only
+		BANK_INVESTMENT,              // the bank invests some of its seized assets (interest gained or cards seized)
+		NEW_OR_REIMB_CREDIT,          // a player takes or pays back a credit
+		DEFAULT,                      // a player is defaulting on his debts
+		PLAYER_ASSESSMENT_DEBT_MONEY, // assessment of a player in the debt-money system
+		PLAYER_ASSESSMENT_LIBRE_MONEY // assessment of a player in the libre currency system
+	};
+
+	// A helper to tell for which purposes we need to show cards information in the dialog
 	private final static Set<Purpose> SHOW_CARDS_PURPOSE = new HashSet<>();
 	static
 	{
@@ -69,7 +89,6 @@ public class CreditActionDialog extends JDialog
 	private int mStrongCards = 0;
 	private boolean mApplied = false;
 
-
 	private class ApplyAction extends AbstractAction implements ActionListener
 	{
 		@Override
@@ -82,7 +101,7 @@ public class CreditActionDialog extends JDialog
 				}
 				catch (NumberFormatException e)
 				{
-					showErrorMessage("principal");
+					showErrorMessage(UIMessageKeyProvider.GENERAL_CREDIT_PRINCIPAL.getMessage());
 					return;
 				}
 			if (mInterestTF != null)
@@ -93,7 +112,7 @@ public class CreditActionDialog extends JDialog
 				}
 				catch (NumberFormatException e)
 				{
-					showErrorMessage("intérêts");
+					showErrorMessage(UIMessageKeyProvider.GENERAL_CREDIT_INTEREST.getMessage());
 					return;
 				}
 			}
@@ -105,7 +124,7 @@ public class CreditActionDialog extends JDialog
 				}
 				catch (NumberFormatException e)
 				{
-					showErrorMessage("cartes faibles");
+					showErrorMessage(UIMessageKeyProvider.GENERAL_CARDS_WEAK.getMessage());
 					return;
 				}
 				try
@@ -114,7 +133,7 @@ public class CreditActionDialog extends JDialog
 				}
 				catch (NumberFormatException e)
 				{
-					showErrorMessage("cartes moyennes");
+					showErrorMessage(UIMessageKeyProvider.GENERAL_CARDS_MEDIUM.getMessage());
 					return;
 				}
 				try
@@ -123,7 +142,7 @@ public class CreditActionDialog extends JDialog
 				}
 				catch (NumberFormatException e)
 				{
-					showErrorMessage("cartes fortes");
+					showErrorMessage(UIMessageKeyProvider.GENERAL_CARDS_STRONG.getMessage());
 					return;
 				}
 			}
@@ -135,7 +154,7 @@ public class CreditActionDialog extends JDialog
 				}
 				catch (NumberFormatException e)
 				{
-					showErrorMessage("monnaie faible");
+					showErrorMessage(UIMessageKeyProvider.GENERAL_MONEY_WEAK.getMessage());
 					return;
 				}
 				try
@@ -144,7 +163,7 @@ public class CreditActionDialog extends JDialog
 				}
 				catch (NumberFormatException e)
 				{
-					showErrorMessage("monnaie moyenne");
+					showErrorMessage(UIMessageKeyProvider.GENERAL_MONEY_MEDIUM.getMessage());
 					return;
 				}
 				try
@@ -153,7 +172,7 @@ public class CreditActionDialog extends JDialog
 				}
 				catch (NumberFormatException e)
 				{
-					showErrorMessage("monnaie forte");
+					showErrorMessage(UIMessageKeyProvider.GENERAL_MONEY_STRONG.getMessage());
 					return;
 				}
 			}
@@ -163,7 +182,7 @@ public class CreditActionDialog extends JDialog
 
 		public void showErrorMessage(String pField)
 		{
-			JOptionPane.showMessageDialog(mPrincipalTF, "La valeur saisie pour les " + pField + " n'est pas un nombre.\nMerci de saisir un nombre entier.", "Saisir un nombre", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(mPrincipalTF, MessageFormat.format(UIMessages.getString("CreditActionDialog.Error.Message.ValueForFieldNotANumber"), pField), UIMessages.getString("CreditActionDialog.Error.Title.InputANumber"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -178,16 +197,16 @@ public class CreditActionDialog extends JDialog
 		{
 		case NEW_OR_REIMB_CREDIT:
 		case DEFAULT:
-			mPrincipalLabel = "Principal";
+			mPrincipalLabel = UIMessageKeyProvider.GENERAL_CREDIT_PRINCIPAL.getMessage();
 			break;
 		case MONEY_MASS_CHANGE:
-			mPrincipalLabel = "Delta";
+			mPrincipalLabel = UIMessages.getString("CreditActionDialog.Label.MoneyMassDelta"); //$NON-NLS-1$
 			break;
 		case BANK_INVESTMENT:
-			mPrincipalLabel = "Monnaie investie";
+			mPrincipalLabel = UIMessages.getString("CreditActionDialog.Label.InvestedMoney"); //$NON-NLS-1$
 			break;
 		case PLAYER_ASSESSMENT_DEBT_MONEY:
-			mPrincipalLabel = "Monnaie restante";
+			mPrincipalLabel = UIMessages.getString("CreditActionDialog.Label.RemainingMoney"); //$NON-NLS-1$
 			break;
 		default:
 			break;
@@ -197,23 +216,25 @@ public class CreditActionDialog extends JDialog
 		{
 			mPrincipalTF = createField(mainPanel, y++, mPrincipalLabel);
 			mPrincipalTF.setText(String.valueOf(pDefaultPrincipal));
+			mPrincipalTF.requestFocusInWindow();
 		}
 		if (Purpose.DEFAULT.equals(pPurpose))
 		{
-			mInterestTF = createField(mainPanel, y++, "Intérêts");
+			mInterestTF = createField(mainPanel, y++, UIMessageKeyProvider.GENERAL_CREDIT_INTEREST.getMessage());
 			mInterestTF.setText(String.valueOf(pDefaultPrincipal / 3));
 		}
 		if (Purpose.PLAYER_ASSESSMENT_LIBRE_MONEY.equals(pPurpose))
 		{
-			mWeakCoinsTF = createField(mainPanel, y++, "Monnaie faible");
-			mMediumCoinsTF = createField(mainPanel, y++, "Monnaie moyenne");
-			mStrongCoinsTF = createField(mainPanel, y++, "Monnaie forte");
+			mWeakCoinsTF = createField(mainPanel, y++, UIMessageKeyProvider.GENERAL_MONEY_WEAK.getMessage());
+			mWeakCoinsTF.requestFocusInWindow();
+			mMediumCoinsTF = createField(mainPanel, y++, UIMessageKeyProvider.GENERAL_MONEY_MEDIUM.getMessage());
+			mStrongCoinsTF = createField(mainPanel, y++, UIMessageKeyProvider.GENERAL_MONEY_STRONG.getMessage());
 		}
 		if (SHOW_CARDS_PURPOSE.contains(pPurpose))
 		{
-			mWeakCardsTF = createField(mainPanel, y++, "Cartes faibles");
-			mMediumCardsTF = createField(mainPanel, y++, "Cartes moyennes");
-			mStrongCardsTF = createField(mainPanel, y++, "Cartes fortes");
+			mWeakCardsTF = createField(mainPanel, y++, UIMessageKeyProvider.GENERAL_CARDS_WEAK.getMessage());
+			mMediumCardsTF = createField(mainPanel, y++, UIMessageKeyProvider.GENERAL_CARDS_MEDIUM.getMessage());
+			mStrongCardsTF = createField(mainPanel, y++, UIMessageKeyProvider.GENERAL_CARDS_STRONG.getMessage());
 		}
 		if (Purpose.DEFAULT.equals(pPurpose))
 		{
@@ -222,17 +243,17 @@ public class CreditActionDialog extends JDialog
 				@Override
 				public void actionPerformed(ActionEvent pEvent)
 				{
-					if (HelperUI.ACTION_CANNOT_PAY.equals(pEvent.getActionCommand()))
+					if (ActionCommand.ACTION_CANNOT_PAY.getMnemo().equals(pEvent.getActionCommand()))
 						mEventType = EventType.CANNOT_PAY;
-					else if (HelperUI.ACTION_BANKRUPTCY.equals(pEvent.getActionCommand()))
+					else if (ActionCommand.ACTION_BANKRUPTCY.getMnemo().equals(pEvent.getActionCommand()))
 						mEventType = EventType.BANKRUPT;
-					else if (HelperUI.ACTION_PRISON.equals(pEvent.getActionCommand()))
+					else if (ActionCommand.ACTION_PRISON.getMnemo().equals(pEvent.getActionCommand()))
 						mEventType = EventType.PRISON;
 				}
 			};
-			final JRadioButton cannotPayRB = createRadio(mainPanel, y++, "Le joueur est saisi mais peut continuer à jouer", HelperUI.ACTION_CANNOT_PAY, rbActionListener);
-			final JRadioButton bankruptRB = createRadio(mainPanel, y++, "Saisie. Il reste moins de 4 cartes au joueur. Faillite personnelle et passe un tour.", HelperUI.ACTION_BANKRUPTCY, rbActionListener);
-			final JRadioButton prisonRB = createRadio(mainPanel, y++, "Le joueur est saisi mais n'a pas assez de cartes pour couvrir la saisie. Prison.", HelperUI.ACTION_PRISON, rbActionListener);
+			final JRadioButton cannotPayRB = createRadio(mainPanel, y++, UIMessages.getString("CreditActionDialog.Option.Label.SeizedOk"), ActionCommand.ACTION_CANNOT_PAY.getMnemo(), rbActionListener); //$NON-NLS-1$
+			final JRadioButton bankruptRB = createRadio(mainPanel, y++, UIMessages.getString("CreditActionDialog.Option.Label.SeizedBankrupt"), ActionCommand.ACTION_BANKRUPTCY.getMnemo(), rbActionListener); //$NON-NLS-1$
+			final JRadioButton prisonRB = createRadio(mainPanel, y++, UIMessages.getString("CreditActionDialog.Option.Label.SeizedPrison"), ActionCommand.ACTION_PRISON.getMnemo(), rbActionListener); //$NON-NLS-1$
 			ButtonGroup actionButtonGroup = new ButtonGroup();
 			actionButtonGroup.add(cannotPayRB);
 			actionButtonGroup.add(bankruptRB);
@@ -241,24 +262,14 @@ public class CreditActionDialog extends JDialog
 			mEventType = EventType.CANNOT_PAY;
 		}
 		final JPanel buttonsPanel = new JPanel(new FlowLayout());
-		final JButton addButton = new JButton("OK");
+		final JButton addButton = new JButton(UIMessages.getString("CreditActionDialog.Button.Label.Ok")); //$NON-NLS-1$
 		buttonsPanel.add(addButton);
 		addButton.addActionListener(new ApplyAction());
-		final JButton cancelButton = new JButton("Annuler");
+		final JButton cancelButton = new JButton(UIMessageKeyProvider.DIALOG_BUTTON_CANCEL.getMessage());
 		buttonsPanel.add(cancelButton);
 		cancelButton.addActionListener(new CancelAction());
 		mainPanel.add(buttonsPanel, new GridBagConstraints(0, 10, 2, 1, 1, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		getContentPane().add(mainPanel);
-		addFocusListener(new FocusListener()
-		{
-			@Override
-			public void focusLost(FocusEvent pEvent) {}
-			@Override
-			public void focusGained(FocusEvent pEvent)
-			{
-				mPrincipalTF.requestFocus();
-			}
-		});
 	}
 
 	private JRadioButton createRadio(final JPanel pMainPanel, final int pGridy, final String pMessage, final String pActionCommand, final ActionListener pActionListener)
@@ -267,10 +278,10 @@ public class CreditActionDialog extends JDialog
 		radioButton.setActionCommand(pActionCommand);
 		radioButton.addActionListener(pActionListener);
 		pMainPanel.add(radioButton, new GridBagConstraints(0, pGridy, 2, 1, 1, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		radioButton.getInputMap().put(KeyStroke.getKeyStroke((char)10), "enter");
-		radioButton.getActionMap().put("enter", new ApplyAction());
-		radioButton.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
-		radioButton.getActionMap().put("escape", new CancelAction());
+		radioButton.getInputMap().put(KeyStroke.getKeyStroke((char)10), CreditActionDialog.ENTER_ACTION);
+		radioButton.getActionMap().put(CreditActionDialog.ENTER_ACTION, new ApplyAction());
+		radioButton.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), CreditActionDialog.ESCAPE_ACTION);
+		radioButton.getActionMap().put(CreditActionDialog.ESCAPE_ACTION, new CancelAction());
 		return radioButton;
 	}
 
@@ -278,12 +289,12 @@ public class CreditActionDialog extends JDialog
 	{
 		pMainPanel.add(new JLabel(pLabel), new GridBagConstraints(0, pGridy, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		final JTextField jTextField = new JTextField(50);
-		jTextField.setText("0");
+		jTextField.setText("0"); //$NON-NLS-1$
 		pMainPanel.add(jTextField, new GridBagConstraints(1, pGridy, 1, 1, 1, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		jTextField.getInputMap().put(KeyStroke.getKeyStroke((char)10), "enter");
-		jTextField.getActionMap().put("enter", new ApplyAction());
-		jTextField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
-		jTextField.getActionMap().put("escape", new CancelAction());
+		jTextField.getInputMap().put(KeyStroke.getKeyStroke((char)10), CreditActionDialog.ENTER_ACTION);
+		jTextField.getActionMap().put(CreditActionDialog.ENTER_ACTION, new ApplyAction());
+		jTextField.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), CreditActionDialog.ESCAPE_ACTION);
+		jTextField.getActionMap().put(CreditActionDialog.ESCAPE_ACTION, new CancelAction());
 		jTextField.addFocusListener(new FocusListener()
 		{
 			@Override

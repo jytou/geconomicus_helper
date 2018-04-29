@@ -6,8 +6,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,6 +24,9 @@ import javax.swing.KeyStroke;
 
 public class ChangeEventDateDialog extends JDialog
 {
+	private static final String ESCAPE_ACTION = "escape"; //$NON-NLS-1$
+	private static final String ENTER_ACTION = "enter"; //$NON-NLS-1$
+
 	private class CancelAction extends AbstractAction implements ActionListener
 	{
 		@Override
@@ -50,11 +51,11 @@ public class ChangeEventDateDialog extends JDialog
 			Date date;
 			try
 			{
-				date = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(mDateTF.getText());
+				date = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(mDateTF.getText()); //$NON-NLS-1$
 			}
 			catch (ParseException e)
 			{
-				JOptionPane.showMessageDialog(ChangeEventDateDialog.this, "La date doit être au format 2018/04/15 22:30:27", "Date incorrecte", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(ChangeEventDateDialog.this, UIMessages.getString("ChangeEventDateDialog.Error.Message.DateMustRespectFormat"), UIMessages.getString("ChangeEventDateDialog.Error.Title.IncorrectDate"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
 				return;
 			}
 			mEntityManager.getTransaction().begin();
@@ -69,42 +70,30 @@ public class ChangeEventDateDialog extends JDialog
 
 	public ChangeEventDateDialog(final JFrame pParent, final EntityManager pEntityManager, final Event pEvent)
 	{
-		super(pParent, "Changer la date d'un événement");
+		super(pParent, UIMessages.getString("ChangeEventDateDialog.Title.ChangeEventDate")); //$NON-NLS-1$
 		mEvent = pEvent;
 		mEntityManager = pEntityManager;
 		setSize(500, 300);
 		setLocation(200, 200);
 		setModal(true);
 		final JPanel mainPanel = new JPanel(new GridBagLayout());
-		mainPanel.add(new JLabel("Date"), new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		mainPanel.add(new JLabel(UIMessages.getString("ChangeEventDateDialog.Label.EventDate")), new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0)); //$NON-NLS-1$
 		final JTextField dateTF = new JTextField(50);
-		dateTF.setText(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(mEvent.getTstamp()));
+		dateTF.setText(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(mEvent.getTstamp())); //$NON-NLS-1$
 		mainPanel.add(dateTF, new GridBagConstraints(1, 0, 1, 1, 1, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-		dateTF.getInputMap().put(KeyStroke.getKeyStroke((char)10), "enter");
-		dateTF.getActionMap().put("enter", new AddAction(dateTF));
-		dateTF.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escape");
-		dateTF.getActionMap().put("escape", new CancelAction());
+		dateTF.getInputMap().put(KeyStroke.getKeyStroke((char)10), ChangeEventDateDialog.ENTER_ACTION);
+		dateTF.getActionMap().put(ChangeEventDateDialog.ENTER_ACTION, new AddAction(dateTF));
+		dateTF.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), ChangeEventDateDialog.ESCAPE_ACTION);
+		dateTF.getActionMap().put(ChangeEventDateDialog.ESCAPE_ACTION, new CancelAction());
+		dateTF.requestFocusInWindow();
 		final JPanel buttonsPanel = new JPanel(new FlowLayout());
-		final JButton applyButton = new JButton("Changer la date !");
+		final JButton applyButton = new JButton(UIMessages.getString("ChangeEventDateDialog.Button.Label.ChangeDate")); //$NON-NLS-1$
 		buttonsPanel.add(applyButton);
 		applyButton.addActionListener(new AddAction(dateTF));
-		final JButton cancelButton = new JButton("Annuler");
+		final JButton cancelButton = new JButton(UIMessageKeyProvider.DIALOG_BUTTON_CANCEL.getMessage());
 		buttonsPanel.add(cancelButton);
 		cancelButton.addActionListener(new CancelAction());
 		mainPanel.add(buttonsPanel, new GridBagConstraints(0, 10, 2, 1, 1, 0, GridBagConstraints.EAST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
 		getContentPane().add(mainPanel);
-		addFocusListener(new FocusListener()
-		{
-			@Override
-			public void focusLost(FocusEvent pE)
-			{
-			}
-			
-			@Override
-			public void focusGained(FocusEvent pE)
-			{
-				dateTF.requestFocus();
-			}
-		});
 	}
 }

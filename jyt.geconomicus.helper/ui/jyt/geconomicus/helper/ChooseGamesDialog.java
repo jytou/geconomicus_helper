@@ -32,11 +32,19 @@ import javax.swing.table.AbstractTableModel;
 
 public class ChooseGamesDialog extends JFrame
 {
+	private static final String OPEN_GAME_ACTION = "openGame"; //$NON-NLS-1$
 	private boolean mChosen = false;
 	private List<Game> mGames;
 	private class GamesTableModel extends AbstractTableModel
 	{
-		private final String[] COL_NAMES = new String[] {"Lieu", "Date", "Animateur", "Système monétaire", "Description"};
+		private final String[] COL_NAMES = new String[]
+		{
+			UIMessageKeyProvider.GAME_LOCATION_LABEL.getMessage(),
+			UIMessageKeyProvider.GAME_DATE_LABEL.getMessage(),
+			UIMessageKeyProvider.GAME_ANIMATOR_PSEUDO_LABEL.getMessage(),
+			UIMessageKeyProvider.GAME_MONEY_TYPE_LABEL.getMessage(),
+			UIMessageKeyProvider.GAME_DESCRIPTION_LABEL.getMessage()
+		};
 
 		@Override
 		public int getRowCount()
@@ -69,25 +77,26 @@ public class ChooseGamesDialog extends JFrame
 			case 2:
 				return game.getAnimatorPseudo();
 			case 3:
-				return game.getMoneySystem() == Game.MONEY_DEBT ? "Monnaie-dette" : "Monnaie libre";
+				return game.getMoneySystem() == Game.MONEY_DEBT ? UIMessageKeyProvider.GENERAL_DEBT_MONEY.getMessage() : UIMessageKeyProvider.GENERAL_LIBRE_CURRENCY.getMessage();
 			case 4:
 				return game.getDescription();
 			}
-			return "ERROR";
+			// This should never happen
+			return "ERROR"; //$NON-NLS-1$
 		}
 	}
 
 	public static void main(String[] args) throws IOException
 	{
-		final EntityManagerFactory factory = Persistence.createEntityManagerFactory("geco");
+		final EntityManagerFactory factory = Persistence.createEntityManagerFactory(HelperUI.DB_DEFAULT_NAME);
 		final EntityManager entityManager = factory.createEntityManager();
 		new ChooseGamesDialog(entityManager, factory).setVisible(true);
 	}
 
 	public ChooseGamesDialog(final EntityManager pEntityManager, final EntityManagerFactory pFactory) throws IOException
 	{
-		super("Choisir les parties à comparer");
-		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus_stats.png")));
+		super(UIMessages.getString("ChooseGamesDialog.Title.ChooseGamesToCompare")); //$NON-NLS-1$
+		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus_stats.png"))); //$NON-NLS-1$
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
@@ -105,7 +114,7 @@ public class ChooseGamesDialog extends JFrame
 		setLocation(screenSize.width / 2 - size.width/2, screenSize.height / 2 - size.height/2);
 		final JPanel mainPanel = new JPanel(new GridBagLayout());
 		final Insets insets = new Insets(0, 0, 0, 0);
-		final JButton openGamesButton = new JButton("Ouvrir ces parties");
+		final JButton openGamesButton = new JButton(UIMessages.getString("ChooseGamesDialog.Button.Label.OpenGames")); //$NON-NLS-1$
 		mainPanel.add(openGamesButton, new GridBagConstraints(0, 1, 1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE, insets, 0, 0));
 		feedGames(pEntityManager);
 		final JTable gamesTable = new JTable(new GamesTableModel());
@@ -144,8 +153,8 @@ public class ChooseGamesDialog extends JFrame
 		openGamesButton.setEnabled(false);
 		openGamesButton.addActionListener(openGameAction);
 		openGamesButton.setMnemonic('O');
-		openGamesButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK), "openGame");
-		openGamesButton.getActionMap().put("openGame", openGameAction);
+		openGamesButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK), ChooseGamesDialog.OPEN_GAME_ACTION);
+		openGamesButton.getActionMap().put(ChooseGamesDialog.OPEN_GAME_ACTION, openGameAction);
 		getContentPane().add(mainPanel);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 	}
@@ -153,6 +162,6 @@ public class ChooseGamesDialog extends JFrame
 	@SuppressWarnings("unchecked")
 	public void feedGames(final EntityManager pEntityManager)
 	{
-		mGames = pEntityManager.createNamedQuery("Game.findAll").getResultList();
+		mGames = pEntityManager.createNamedQuery("Game.findAll").getResultList(); //$NON-NLS-1$
 	}
 }
