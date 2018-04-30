@@ -20,7 +20,7 @@ Le tout est sauvegardé en temps réel dans une base de données locale en cas d
 
 # Lancement du programme
 
-Récupérer [le dernier jar](https://github.com/jytou/geconomicus_helper/releases) dans les releases. Assurez-vous de bien avoir Java installé sur votre machine.
+Récupérer [le dernier jar](https://github.com/jytou/geconomicus_helper/releases) dans les releases. Assurez-vous de bien avoir Java 8 installé sur votre machine.
 
 Lancer le jar en tapant simplement
 
@@ -42,18 +42,23 @@ Ou bien créer une partie dans la même boîte de dialogue :
 
 À noter que le « facteur carte/monnaie » représente le nombre d'unités monétaires (le nombre de jetons ou billets de valeur faible) nécessaires pour échanger une carte faible en monnaie-dette (en monnaie libre, c'est toujours 3 fois cette valeur). Les règles officielles spécifient 2, mais certaines variantes utilisent 1 (une unité monétaire pour une carte).
 
-Enfin, on peut aussi importer une partie qui a été exportée en XML.
+Comme on peut le voir, il est aussi possible d'importer une partie ayant été exportée préalablement (par quelqu'un d'autre sur une autre machine, par exemple).
 
 En créant une partie, on se retrouve avec un écran vide, mais déjà avec plein d'indications :
 
 ![Écran principal](captures/ecranprincipal.jpg)
 
-Les différents boutons indiquent les actions disponibles (mis à part quelques unes disponibles uniquement par menu car peu courantes - fin de partie, import/export, changement de description de la partie, rupture technologique). Les raccourcis clavier fonctionnent partout dans l'écran (pas de Ctrl ou Alt, c'est directement la touche concernée qui déclenche l'action), attention si vous avez un chat qui se balade près de l'ordi, il pourrait jouer la partie à lui tout seul !
-Une barre de statut en bas de l'écran est mise à jour en temps réel et donne des indications importantes sur la partie, masse monétaire, nombre de tours, etc.
+Les différents boutons indiquent les actions disponibles (mis à part quelques unes disponibles uniquement par menu car peu courantes - fin de partie, import/export, changement de description de la partie, rupture technologique…). Les raccourcis clavier fonctionnent partout dans l'écran (pas de Ctrl ou Alt, c'est directement la touche concernée qui déclenche l'action), attention si vous avez un chat qui se balade près de l'ordi, il pourrait jouer la partie à lui tout seul !
+
+Au début, il est possible d'ouvrir une petite fenêtre supplémentaire indiquant les raccourcis clavier avec leur signification mnémotechnique, en utilisant le menu « Vue / raccourcis clavier » :
+
+![Raccourcis clavier](captures/kbshortcuts.jpg)
+
+Une barre de statut en bas de l'écran est mise à jour en temps réel et donne des indications importantes sur la partie, masse monétaire, nombre de tours, nombre de joueurs, etc.
 
 En début de partie, on ajoute les différents joueurs, en appuyant simplement sur [j], on tape leur nom puis [entrée]. **Bien veiller à avoir des noms de joueurs uniques** (quitte à mettre l'initale de leur nom ou tout autre identifiant permettant de distinguer les deux), sinon comme les tableaux sont triés par ordre alphabétique, il sera impossible de distinguer les deux joueurs. Des avertissements s'affichent si deux noms de joueurs sont trop ambigus. Il est possible de renommer un joueur en sélectionnant la ligne qui lui correspond, puis de faire F2 ou d'aller dans le menu Joueur/renommer.
 
-Ensuite, il suffit de se balader avec les flèches dans la liste ou de sélectionner le joueur désiré et d'appuyer sur la touche [c] pour indiquer que la banque lui octroie un crédit puis [entrée] directement s'il s'agit d'un crédit de 3 (par défaut) :
+Ensuite, il suffit de se balader avec les flèches dans la liste (utiliser PgUp et PgDown pour aller rapidement en haut ou en bas de la liste) ou de sélectionner le joueur désiré avec la souris et d'appuyer sur la touche [c] pour indiquer que la banque lui octroie un crédit puis [entrée] directement s'il s'agit d'un crédit de 3 (par défaut) :
 
 ![Nouveau crédit](captures/nouveau_credit.jpg)
 
@@ -70,16 +75,16 @@ La dernière cellule de droite pour chaque joueur contient une chaîne de caract
 - M pour la mort,
 - +3 indique un crédit de 3,
 - puis +3/1/1 indique par exemple qu'il a remboursé deux fois un intérêt de 1,
-- D indique un défaut,
+- D indique un défaut, suivi éventuellement de F (faillite personnelle) ou P (prison),
 - R un remboursement et un point indique la fin du crédit.
 
 On peut donc voir d'un coup d'œil si un joueur a déjà pris un crédit auparavant et comment ça s'est terminé… Ben oui, un banquier c'est omniscient, non ?
 
-Le programme suggère également quel(s) joueur(s) doi(ven)t mourir à ce tour pour que tous soient renouvelés avant la fin du jeu. Il reste de la responsabilité de l'animateur de provoquer ces morts lui-même.
+Le programme suggère également quel(s) joueur(s) doi(ven)t mourir à ce tour pour que tous soient renouvelés avant la fin du jeu. Il reste de la responsabilité de l'animateur de provoquer ces morts lui-même, il peut décider de faire autrement en fonction de son bon vouloir, mais suivre les indications du programme garantit que tous les joueurs auront fait l'expérience d'une renaissance en cours de partie.
 
 ![Morts suggérées, tableaux](captures/morts_sugg.jpg)
 
-Le remboursement d'un crédit est déclenché par un appui sur [r] sur le bon joueur, puis éventuellement modifier le montant du principal, les intérêts sont automatiquement calculés.
+Le remboursement d'un crédit est déclenché par un appui sur [r] sur le bon joueur, puis éventuellement modifier le montant du principal, les intérêts sont automatiquement calculés et n'apparaissent pas à l'écran (le banquier ne doit néanmoins pas oublier de les saisir physiquement auprès du joueur).
 
 ![Remboursement de crédit](captures/rembours_credit.jpg)
 
@@ -92,7 +97,7 @@ La banque peut également se transformer en banque d'investissement en investiss
 ![Banque d'investissement](captures/bank_invest.jpg)
 
 À noter que la dernière action peut être annulée (touche [z]). Une fois annulée, la touche [z] permet d'annuler la précédente et ainsi de suite. On peut donc même annuler toutes les actions de la partie (mais attention il n'y a pas de « redo » pour l'instant, même s'il ne serait pas très difficile de le rajouter, ça ne m'a pas vraiment semblé utile). De même, on peut supprimer des événements en les sélectionnant (le tableau supporte la multi-sélection) et en appuyant sur la touche [Suppr]. Attention, il n'y a aucune vérification sur la cohérence des événements supprimés, à utiliser à vos risques et périls !
-Il est aussi possible de changer la date d'un événement pour les cas à la marge. Là encore, à utiliser avec parcimonie, et uniquement si vous êtes sûr de vous.
+Il est aussi possible de changer la date d'un événement pour les cas à la marge en appuyant sur F2 après avoir cliqué sur l'événement en question. Là encore, à utiliser avec parcimonie, et uniquement si vous êtes sûr de vous. Il est également possible d'éditer les valeurs saisies (monnaie, cartes) pour un événement en double-cliquant sur la valeur en question. Là-aussi, à utiliser le moins possible.
 
 En fin de partie, on fait l'inventaire des valeurs possédées par les joueurs en les faisant « quitter » la partie, puis on termine en indiquant l'événement « fin de partie » dans le menu.
 
@@ -156,7 +161,7 @@ L'onglet suivant inclut cette fois la banque, avec la même échelle pour l'éca
 
 L'onglet suivant représente l'évolution de la masse monétaire au cours de la partie, où l'on voit bien les moments d'asséchement monétaire et les défauts de paiement souvent dûs à un manque de monnaie :
 
-![Statistiques de la masse monétaire](captures/statmm.jpg)
+![Historique de la masse monétaire en monnaie dette](captures/statmmd.jpg)
 
 On passe ensuite à la partie en monnaie libre :
 
@@ -164,14 +169,18 @@ On passe ensuite à la partie en monnaie libre :
 
 La monnaie libre a elle-aussi son historique de masse monétaire approximatif. Même si cet écran n'a que peu d'intérêt d'analyse, cela montre à l'audience visuellement la différence flagrante avec la monnaie-dette et l'absence d'asséchement monétaire qui les a tant handicapés en monnaie-dette.
 
+![Historique de la masse monétaire en monnaie libre](captures/statmml.jpg)
+
+On peut voir la masse monétaire varier au gré des morts (comme il n'y a pas d'héritage, la monnaie d'un joueur qui meurt est tout simplement retirée de la masse monétaire totale). Le programme attribue un DU à chaque joueur à chaque tour, et lui enlève une demi-valeur monétaire, ce qui devrait être la moyenne au niveau des joueurs. Si on voit qu'il y a bien des petites variations de masse monétaire en cours de partie, le contraste visuel avec les dents de scie de la partie en monnaie dette devrait être flagrant.
+
 Et enfin, le dernier onglet aggrège les résultats des deux parties (ou plus !), qui permet de comparer d'un coup d'œil les résultats, en particulier la moyenne de création de valeurs et la différence d'écart-type entre les deux parties :
 
 ![Statistiques aggrégées](captures/stataggreges.jpg)
 
 Des statistiques « corrigées » intègrent également une version avec les corrections suivantes :
 
-- dans les deux parties, on soustrait les 8 cartes de départ des valeurs créées par les joueurs,
-- dans la partie en monnaie libre, on soustrait le double du DU moyen puisqu'il ne s'agit que de monnaie, pas de création de valeur.
+- dans les deux parties, on soustrait les 8 cartes de départ des valeurs créées par les joueurs puisqu'il ne s'agit en fait pas de valeurs « créées » dans la mesure où elles ont été distribuées à chaque fois qu'un joueur rejoint la partie (soit au début, soit suite à une renaissance), cette correction réaliste avantage sérieusement la banque en monnaie dette puisque les valeurs créées par les joueurs se retrouvent sérieusement diminuées (certains joueurs peuvent même être en négatif, si la banque a saisi plus de valeurs qu'ils n'ont créé),
+- dans la partie en monnaie libre, on soustrait le double du DU moyen puisqu'il ne s'agit que de monnaie, pas de création de valeur, il est difficile de faire l'ajustement équivalent en monnaie dette puisque la monnaie n'est pas liée à chaque joueur ; cet ajustement profite à la monnaie dette, mais sans toutefois changer sérieusement les conclusions (on crée toujours plus de valeurs en monnaie libre, même après suppression de la monnaie en monnaie libre, et les écarts-types des deux parties sont toujours très différents).
 
 Ce dernier onglet est plutôt à réserver aux animateurs, inutile de prendre la tête du public avec ça, mais en cas de questions du genre « mais je n'ai pas créé autant de valeurs puisque je suis parti avec des cartes », cela peut être pratique pour montrer que ça ne change pas les conclusions générales.
 
@@ -190,7 +199,7 @@ Ceci dit, en cas de plantage PC irrécupérable (crash de disque dur, etc), on n
 
 - La description (commentaires) du jeu est également modifiable depuis le menu Partie.
 
-- En cas d'irrégularité dans les affichage (ce qui ne devrait pas arriver, mais bon), il est possible de demander à recalculer toutes les stats à partir des événements enregistrés, c'est le menu Partie/Recalcul des événements.
+- En cas d'irrégularité dans les affichages (ce qui ne devrait pas arriver, mais bon), il est possible de demander à recalculer toutes les stats à partir des événements enregistrés, c'est le menu Partie/Recalcul des événements.
 
 - En cas de hold-up de la banque ou autre événement imprévu, il est possible d'ajuster manuellement la masse monétaire.
 
@@ -223,6 +232,6 @@ La couche métier est séparée (elle est utilisée par le programme principal, 
 - améliorer les écrans, visuellement,
 - afficher les valeurs faibles/moyennes/fortes en cours (mais elles changent uniquement en cas de rupture technologique, ce qui est assez rare pour qu'on puisse s'en passer à mon avis),
 - ajouter un minuteur (c'est vraiment assez peu indispensable, on va faire sans pour l'instant),
-- internationaliser les messages (qui sont actuellement en français vu que le public susceptible d'utiliser l'appli aujourd'hui est essentiellement francophone).
+~~- internationaliser les messages (qui sont actuellement en français vu que le public susceptible d'utiliser l'appli aujourd'hui est essentiellement francophone).~~
 
 N'hésitez pas à faire des *issues*.
