@@ -28,6 +28,14 @@ Lancer le jar en tapant simplement
 
 Selon votre configuration, il suffit même peut-être de double-cliquer sur le fichier pour qu'il se lance.
 
+Note : pour changer de langue d'affichage du programme, il suffit de le lancer avec les paramètes suivants (par exemple pour l'anglais US) :
+
+>java -Duser.country=US -Duser.language=en -jar gecohelper.jar
+
+Noter l'utilisation des majuscules et minuscules. Pour forcer en français :
+
+>java -Duser.country=FR -Duser.language=fr -jar gecohelper.jar
+
 # Présentation des écrans
 
 Note : ces copies d'écrans ne sont **pas** issues de parties réelles, mais sont réalistes et devraient correspondre grosso-modo à ce à quoi devraient ressembler de vraies parties.
