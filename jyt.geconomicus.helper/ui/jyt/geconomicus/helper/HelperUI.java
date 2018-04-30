@@ -445,26 +445,27 @@ public class HelperUI extends JFrame
 			Color color = Color.black;
 			setToolTipText(""); //$NON-NLS-1$
 			setText(""); //$NON-NLS-1$
+			String tooltip = ""; //$NON-NLS-1$
 			switch (value)
 			{
 			case PLAYER_INACTIVE:
-				setToolTipText(UIMessages.getString("HelperUI.PlayerTable.Tooltip.InactivePlayer")); //$NON-NLS-1$
+				tooltip = UIMessages.getString("HelperUI.PlayerTable.Tooltip.InactivePlayer"); //$NON-NLS-1$
 				color = Color.gray;
 				break;
 			case PLAYER_NEEDS_BANK:
-				setToolTipText(UIMessages.getString("HelperUI.PlayerTable.Tooltip.PlayerMustVisitBank")); //$NON-NLS-1$
+				tooltip = UIMessages.getString("HelperUI.PlayerTable.Tooltip.PlayerMustVisitBank"); //$NON-NLS-1$
 				color = Color.red;
 				break;
 			case PLAYER_IN_WARNING:
-				setToolTipText(mPlayersInWarning.get(mPlayers.get(pRow).getId()));
+				tooltip = mPlayersInWarning.get(mPlayers.get(pRow).getId());
 				color = Color.orange;
 				break;
 			case PLAYER_IN_PRISON:
-				setToolTipText(UIMessages.getString("HelperUI.PlayerTable.Tooltip.PlayerInPrison")); //$NON-NLS-1$
+				tooltip = UIMessages.getString("HelperUI.PlayerTable.Tooltip.PlayerInPrison"); //$NON-NLS-1$
 				color = Color.lightGray;
 				break;
 			case PLAYER_OK:
-				setToolTipText(UIMessages.getString("HelperUI.PlayerTable.Tooltip.PlayerOk")); //$NON-NLS-1$
+				tooltip = UIMessages.getString("HelperUI.PlayerTable.Tooltip.PlayerOk"); //$NON-NLS-1$
 				color = Color.green;
 				break;
 
@@ -473,6 +474,15 @@ public class HelperUI extends JFrame
 			}
 			setBackground(color);
 			mDeathCandidate = mSuggestedDeathsLabel.getText().contains(mPlayers.get(pRow).getName());
+			if (mDeathCandidate)
+			{
+				tooltip = "<html>" + tooltip; //$NON-NLS-1$
+				if (tooltip.length() > 0)
+					tooltip += "<br>"; //$NON-NLS-1$
+				tooltip += UIMessages.getString("HelperUI.Player.Table.Tooltip.SuggestedDeath"); //$NON-NLS-1$
+				tooltip = tooltip + "</html>"; //$NON-NLS-1$
+			}
+			setToolTipText(tooltip);
 			return this;
 		}
 
@@ -1174,6 +1184,7 @@ public class HelperUI extends JFrame
 		setGame(pGame);
 
 		setVisible(true);
+		mPlayerTable.requestFocusInWindow();
 	}
 
 	private void createMenuAndToolbar(final JPanel pMainPanel, final int pMoneySystem)
@@ -1223,7 +1234,14 @@ public class HelperUI extends JFrame
 				{
 					if (mValuesHelper == null)
 					{
-						mValuesHelper = new ValuesHelper(HelperUI.this, mGame.getMoneySystem());
+						try
+						{
+							mValuesHelper = new ValuesHelper(HelperUI.this, mGame.getMoneySystem());
+						}
+						catch (IOException e)
+						{
+							UIUtil.showExceptionMessage(HelperUI.this, e);
+						}
 						for (Event event : mEvents)
 							if (EventType.TURN.equals(event.getEvt()))
 								mValuesHelper.rotateValues();
@@ -1245,7 +1263,14 @@ public class HelperUI extends JFrame
 				{
 					if (mKBShortcutsHelper == null)
 					{
-						mKBShortcutsHelper = new KeyboardShortcutsHelper(HelperUI.this, mGame.getMoneySystem());
+						try
+						{
+							mKBShortcutsHelper = new KeyboardShortcutsHelper(HelperUI.this, mGame.getMoneySystem());
+						}
+						catch (IOException e)
+						{
+							UIUtil.showExceptionMessage(HelperUI.this, e);
+						}
 						mKBShortcutsHelper.setVisible(true);
 					}
 				}
@@ -1338,7 +1363,6 @@ public class HelperUI extends JFrame
 		final JPanel playerListPane = new JPanel(new GridBagLayout());
 		mPlayerTableModel = new PlayerTableModel(pMoneySystem);
 		mPlayerTable = new JTable(mPlayerTableModel);
-		mPlayerTable.requestFocusInWindow();
 		mPlayerTable.setDefaultRenderer(Integer.class, new PlayerColorRenderer());
 		mPlayerTable.setDefaultRenderer(String.class, new PlayerColorRenderer());
 		final TableColumnModel columnModel = mPlayerTable.getColumnModel();
@@ -1483,7 +1507,7 @@ public class HelperUI extends JFrame
 			if (mGame.getMoneySystem() == Game.MONEY_DEBT)
 			{
 				mMoneyMassLabel.setText(String.valueOf(mGame.getMoneyMass()) + " ");//$NON-NLS-1$
-				mMoneyPerPlayerLabel.setText(new DecimalFormat(".###").format(mPlayers.size() > 0 ? 1.0 * mGame.getMoneyMass() / mPlayers.size() : 0.0) + " ");//$NON-NLS-1$//$NON-NLS-2$
+				mMoneyPerPlayerLabel.setText(new DecimalFormat("#.###").format(mPlayers.size() > 0 ? 1.0 * mGame.getMoneyMass() / mPlayers.size() : 0.0) + " ");//$NON-NLS-1$//$NON-NLS-2$
 				mGainedInterestLabel.setText(String.valueOf(mGame.getInterestGained()) + " ");//$NON-NLS-1$
 				mSeizedValuesLabel.setText(String.valueOf(mGame.getSeizedValues()) + " ");//$NON-NLS-1$
 			}

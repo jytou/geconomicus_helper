@@ -1,0 +1,17 @@
+[EL Info]: 2018-04-30 13:02:47.363--ServerSession(825791803)--EclipseLink, version: Eclipse Persistence Services - 2.7.1.v20171221-bd47e8f
+[EL Info]: connection: 2018-04-30 13:02:47.829--ServerSession(825791803)--/file:/home/jytou/git/geconomicus_helper/jyt.geconomicus.helper/bin/_geco login successful
+[EL Warning]: 2018-04-30 13:02:48.428--ServerSession(825791803)--Exception [EclipseLink-4002] (Eclipse Persistence Services - 2.7.1.v20171221-bd47e8f): org.eclipse.persistence.exceptions.DatabaseException
+Internal Exception: org.h2.jdbc.JdbcSQLException: La contrainte "FK_PLAYER_GAME_ID" existe déjà
+Constraint "FK_PLAYER_GAME_ID" already exists; SQL statement:
+ALTER TABLE PLAYER ADD CONSTRAINT FK_PLAYER_GAME_ID FOREIGN KEY (GAME_ID) REFERENCES GAME (ID) [90045-197]
+Error Code: 90045
+Call: ALTER TABLE PLAYER ADD CONSTRAINT FK_PLAYER_GAME_ID FOREIGN KEY (GAME_ID) REFERENCES GAME (ID)
+Query: DataModifyQuery(sql="ALTER TABLE PLAYER ADD CONSTRAINT FK_PLAYER_GAME_ID FOREIGN KEY (GAME_ID) REFERENCES GAME (ID)")
+[EL Warning]: 2018-04-30 13:02:48.438--ServerSession(825791803)--Exception [EclipseLink-4002] (Eclipse Persistence Services - 2.7.1.v20171221-bd47e8f): org.eclipse.persistence.exceptions.DatabaseException
+Internal Exception: org.h2.jdbc.JdbcSQLException: La contrainte "FK_EVENT_PLAYER_ID" existe déjà
+Constraint "FK_EVENT_PLAYER_ID" already exists; SQL statement:
+ALTER TABLE EVENT ADD CONSTRAINT FK_EVENT_PLAYER_ID FOREIGN KEY (PLAYER_ID) REFERENCES PLAYER (ID) [90045-197]
+Error Code: 90045
+Call: ALTER TABLE EVENT ADD CONSTRAINT FK_EVENT_PLAYER_ID FOREIGN KEY (PLAYER_ID) REFERENCES PLAYER (ID)
+Query: DataModifyQuery(sql="ALTER TABLE EVENT ADD CONSTRAINT FK_EVENT_PLAYER_ID FOREIGN KEY (PLAYER_ID) REFERENCES PLAYER (ID)")
+[EL Info]: connection: 2018-04-30 13:02:56.692--ServerSession(825791803)--/file:/home/jytou/git/geconomicus_helper/jyt.geconomicus.helper/bin/_geco logout successful

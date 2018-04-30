@@ -3,9 +3,11 @@ package jyt.geconomicus.helper;
 import java.awt.BorderLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -18,9 +20,10 @@ public class KeyboardShortcutsHelper extends JFrame
 	private static final int DEFAULT_HEIGHT = 200;
 	private HelperUI mHelperUI;
 
-	public KeyboardShortcutsHelper(HelperUI pHelperUI, int pMoneySystem)
+	public KeyboardShortcutsHelper(HelperUI pHelperUI, int pMoneySystem) throws IOException
 	{
 		super(UIMessages.getString("KeyboardShortcutsHelper.Main.Title")); //$NON-NLS-1$
+		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus.png"))); //$NON-NLS-1$
 		mHelperUI = pHelperUI;
 		addWindowListener(new WindowAdapter()
 		{

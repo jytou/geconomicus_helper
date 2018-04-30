@@ -16,8 +16,10 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
+import java.io.IOException;
 import java.text.MessageFormat;
 
+import javax.imageio.ImageIO;
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -236,7 +238,7 @@ public class ValuesHelper extends JFrame
 		}
 	}
 
-	public ValuesHelper(HelperUI pHelperUI, int pMoneySystem)
+	public ValuesHelper(HelperUI pHelperUI, int pMoneySystem) throws IOException
 	{
 		super(UIMessages.getString("Frame.ValuesHelper.Frame.Title")); //$NON-NLS-1$
 		mHelperUI = pHelperUI;
@@ -249,6 +251,7 @@ public class ValuesHelper extends JFrame
 				mHelperUI.closedValueHelper();
 			}
 		});
+		setIconImage(ImageIO.read(HelperUI.class.getResourceAsStream("/geconomicus.png"))); //$NON-NLS-1$
 		setSize(Toolkit.getDefaultToolkit().getScreenSize());
 		MoneyHelperPanel moneyHelperPanel = new MoneyHelperPanel();
 		getContentPane().setLayout(new BorderLayout());
