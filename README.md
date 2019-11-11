@@ -1,3 +1,7 @@
+!!! ATTENTION !!!
+
+Ce projet n'est plus maintenu ici, il est maintenant sur gitlab : https://gitlab.com/jytou/geconomicus_helper
+
 Un programme pour aider à animer les jeux Ğeconomicus, y compris pour le banquier. Il s'agit pour l'instant uniquement d'un programme pour ordinateur supportant java 8 (pas d'appli mobile).
 
 # Introduction
